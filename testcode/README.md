@@ -1,0 +1,1 @@
+3 code segments for reading flexsensor signals. Use a serial monitor and serial ploter to track the signals.

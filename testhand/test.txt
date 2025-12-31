@@ -1,0 +1,461 @@
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "driver/i2c.h"
+#include "mpu6050.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
+#include "lwip/sockets.h"
+#include "lwip/netdb.h"
+#include "esp_timer.h"
+static const char *TAG = "MPU68_CLIENT";
+
+// WiFi configuration
+#define WIFI_SSID      "Redmi"
+#define WIFI_PASS      "minh2603"
+#define SERVER_IP      "10.247.190.128"  // IP của ESP32_2 (thay đổi theo IP thực)
+#define SERVER_PORT    1234
+
+// I2C configuration
+#define I2C_MASTER_SCL_IO    22
+#define I2C_MASTER_SDA_IO    21
+#define I2C_MASTER_NUM       I2C_NUM_0
+#define MPU6050_ADDR         0x68
+
+// WiFi event group
+static EventGroupHandle_t wifi_event_group;
+#define WIFI_CONNECTED_BIT BIT0
+
+// Mahony filter structure
+typedef struct {
+    float q0, q1, q2, q3;
+    float Kp, Ki;
+    float integralFBx, integralFBy, integralFBz;
+} MahonyFilter;
+
+// Global variables
+static mpu6050_handle_t mpu = NULL;
+static MahonyFilter filter;
+static float yaw_current = 0;
+static float yaw_prev = 0;
+static float yaw_total = 0;
+static bool calibrated = false;
+static int sock = -1;
+
+// WiFi event handler
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, 
+                               int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+        ESP_LOGI(TAG, "WiFi station started");
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        ESP_LOGI(TAG, "WiFi disconnected, trying to reconnect...");
+        esp_wifi_connect();
+        xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    }
+}
+
+// WiFi initialization
+static void wifi_init_sta(void) {
+    ESP_LOGI(TAG, "Initializing WiFi...");
+    
+    // Create event group
+    wifi_event_group = xEventGroupCreate();
+    
+    // Initialize TCP/IP stack
+    ESP_ERROR_CHECK(esp_netif_init());
+    
+    // Create event loop
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    
+    // Create default WiFi station
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    assert(sta_netif);
+
+    // Initialize WiFi with default config
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    // Register event handlers
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                                                        IP_EVENT_STA_GOT_IP,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL));
+
+    // Configure WiFi station
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        },
+    };
+    
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "WiFi initialization complete");
+    ESP_LOGI(TAG, "Connecting to SSID: %s", WIFI_SSID);
+}
+
+// Cập nhật trong tcp_client_task() của ESP32_1:
+static void tcp_client_task(void *pvParameters) {
+    struct sockaddr_in server_addr;
+    char message[50];
+    int len;
+    
+    // Wait for WiFi connection
+    ESP_LOGI(TAG, "Waiting for WiFi connection...");
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, 
+                                          WIFI_CONNECTED_BIT, 
+                                          pdFALSE, pdTRUE, portMAX_DELAY);
+    
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "WiFi connected successfully");
+    }
+    
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI(TAG, "Starting TCP client...");
+    
+    while (1) {
+        if (sock < 0) {
+            // Create socket
+            sock = socket(AF_INET, SOCK_STREAM, 0);
+            if (sock < 0) {
+                ESP_LOGE(TAG, "Unable to create socket");
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                continue;
+            }
+            
+            // Configure server address
+            server_addr.sin_family = AF_INET;
+            server_addr.sin_port = htons(SERVER_PORT);
+            server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+            
+            // Connect to server
+            ESP_LOGI(TAG, "Connecting to server %s:%d...", SERVER_IP, SERVER_PORT);
+            if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+                ESP_LOGE(TAG, "Socket connect failed");
+                close(sock);
+                sock = -1;
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
+                continue;
+            }
+            
+            ESP_LOGI(TAG, "Connected to server successfully");
+            
+            // Read welcome message
+            char welcome[50];
+            int welcome_len = recv(sock, welcome, sizeof(welcome) - 1, 0);
+            if (welcome_len > 0) {
+                welcome[welcome_len] = '\0';
+                ESP_LOGI(TAG, "Server: %s", welcome);
+            }
+        }
+        
+        // Send command based on yaw angle if calibrated
+        if (calibrated) {
+            // Gửi commands đơn giản theo ngưỡng
+            if (yaw_total > 45.0f) {
+                len = snprintf(message, sizeof(message), "RIGHT\n");
+            } 
+            else if (yaw_total > 20.0f) {
+                len = snprintf(message, sizeof(message), "RIGHT45\n");
+            }
+            else if (yaw_total > 5.0f) {
+                len = snprintf(message, sizeof(message), "YAW:%.1f\n", yaw_total);
+            }
+            else if (yaw_total < -45.0f) {
+                len = snprintf(message, sizeof(message), "LEFT\n");
+            }
+            else if (yaw_total < -20.0f) {
+                len = snprintf(message, sizeof(message), "LEFT45\n");
+            }
+            else if (yaw_total < -5.0f) {
+                len = snprintf(message, sizeof(message), "YAW:%.1f\n", yaw_total);
+            }
+            else {
+                // Trong deadzone, về HOME
+                len = snprintf(message, sizeof(message), "HOME\n");
+            }
+            
+            // Gửi command
+            if (send(sock, message, len, 0) < 0) {
+                ESP_LOGE(TAG, "Send failed, reconnecting...");
+                close(sock);
+                sock = -1;
+            } else {
+                ESP_LOGI(TAG, "Sent: %s", message);
+                
+                // Nhận ACK từ server (tùy chọn)
+                char ack[50];
+                int ack_len = recv(sock, ack, sizeof(ack) - 1, 0);
+                if (ack_len > 0) {
+                    ack[ack_len] = '\0';
+                    ESP_LOGI(TAG, "Server ACK: %s", ack);
+                }
+            }
+        }
+        
+        // Send every 100ms (10Hz)
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+// Initialize Mahony filter
+static void mahony_init(MahonyFilter *f, float Kp_val, float Ki_val) {
+    f->q0 = 1.0f; f->q1 = 0.0f; f->q2 = 0.0f; f->q3 = 0.0f;
+    f->integralFBx = 0.0f; f->integralFBy = 0.0f; f->integralFBz = 0.0f;
+    f->Kp = Kp_val; f->Ki = Ki_val;
+}
+
+// Fast Mahony filter update
+static void mahony_update_fast(MahonyFilter *f, float gx, float gy, float gz,
+                              float ax, float ay, float az, float dt) {
+    float norm;
+    float vx, vy, vz;
+    float ex, ey, ez;
+    
+    // Normalize accelerometer
+    norm = sqrtf(ax*ax + ay*ay + az*az);
+    if (norm < 0.001f) norm = 0.001f;
+    ax /= norm; ay /= norm; az /= norm;
+    
+    // Calculate error from accelerometer
+    vx = 2.0f * (f->q1*f->q3 - f->q0*f->q2);
+    vy = 2.0f * (f->q0*f->q1 + f->q2*f->q3);
+    vz = f->q0*f->q0 - f->q1*f->q1 - f->q2*f->q2 + f->q3*f->q3;
+    
+    ex = (ay*vz - az*vy);
+    ey = (az*vx - ax*vz);
+    ez = (ax*vy - ay*vx);
+    
+    // Integral feedback
+    if (f->Ki > 0.0f) {
+        f->integralFBx += f->Ki * ex * dt;
+        f->integralFBy += f->Ki * ey * dt;
+        f->integralFBz += f->Ki * ez * dt;
+        gx += f->integralFBx; gy += f->integralFBy; gz += f->integralFBz;
+    }
+    
+    // Proportional feedback
+    gx += f->Kp * ex; gy += f->Kp * ey; gz += f->Kp * ez;
+    
+    // Integrate quaternion
+    gx *= 0.5f * dt; gy *= 0.5f * dt; gz *= 0.5f * dt;
+    
+    float q0 = f->q0, q1 = f->q1, q2 = f->q2, q3 = f->q3;
+    f->q0 += (-q1*gx - q2*gy - q3*gz);
+    f->q1 += (q0*gx + q2*gz - q3*gy);
+    f->q2 += (q0*gy - q1*gz + q3*gx);
+    f->q3 += (q0*gz + q1*gy - q2*gx);
+    
+    // Normalize quaternion
+    norm = sqrtf(f->q0*f->q0 + f->q1*f->q1 + f->q2*f->q2 + f->q3*f->q3);
+    if (norm < 0.001f) norm = 0.001f;
+    f->q0 /= norm; f->q1 /= norm; f->q2 /= norm; f->q3 /= norm;
+}
+
+// Convert quaternion to yaw
+static float quaternion_to_yaw(float q0, float q1, float q2, float q3) {
+    float siny_cosp = 2.0f * (q0 * q3 + q1 * q2);
+    float cosy_cosp = 1.0f - 2.0f * (q2 * q2 + q3 * q3);
+    return atan2f(siny_cosp, cosy_cosp) * 180.0f / M_PI;
+}
+
+// Track continuous yaw angle
+static void update_yaw_tracking(float current_yaw) {
+    float delta = current_yaw - yaw_prev;
+    
+    // Handle wrap-around at -180/180 boundary
+    if (delta > 180.0f) {
+        delta -= 360.0f;
+    } else if (delta < -180.0f) {
+        delta += 360.0f;
+    }
+    
+    yaw_total += delta;
+    yaw_prev = current_yaw;
+    yaw_current = current_yaw;
+}
+
+// Calibrate initial position
+static void calibrate_yaw() {
+    ESP_LOGI(TAG, "Calibrating... Hold sensor steady for 5 seconds");
+    
+    float yaw_sum = 0;
+    int samples = 0;
+    uint32_t last_time = 0;
+    
+    uint32_t start_time = esp_timer_get_time();
+    while ((esp_timer_get_time() - start_time) < 5000000) {
+        mpu6050_acce_value_t acce;
+        mpu6050_gyro_value_t gyro;
+        
+        if (mpu6050_get_acce(mpu, &acce) == ESP_OK && 
+            mpu6050_get_gyro(mpu, &gyro) == ESP_OK) {
+            
+            uint32_t now = esp_timer_get_time();
+            float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+            last_time = now;
+            
+            float gx = gyro.gyro_x * M_PI / 180.0f;
+            float gy = gyro.gyro_y * M_PI / 180.0f;
+            float gz = gyro.gyro_z * M_PI / 180.0f;
+            
+            mahony_update_fast(&filter, gx, gy, gz, 
+                             acce.acce_x, acce.acce_y, acce.acce_z, dt);
+            
+            static uint32_t last_sample = 0;
+            if ((esp_timer_get_time() - last_sample) > 100000) {
+                float yaw = quaternion_to_yaw(filter.q0, filter.q1, filter.q2, filter.q3);
+                yaw_sum += yaw;
+                samples++;
+                last_sample = esp_timer_get_time();
+            }
+        }
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    
+    if (samples > 0) {
+        yaw_current = yaw_sum / samples;
+        yaw_prev = yaw_current;
+        yaw_total = 0;
+        calibrated = true;
+        
+        ESP_LOGI(TAG, "Calibration complete! Initial angle: %.1f°", yaw_current);
+        ESP_LOGI(TAG, "Allowed error: ±15°");
+    }
+}
+
+// I2C initialization
+static void i2c_master_init(void) {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = 400000,
+    };
+    i2c_param_config(I2C_MASTER_NUM, &conf);
+    i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
+}
+
+// MPU6050 initialization
+static void mpu6050_init(void) {
+    mpu = mpu6050_create(I2C_MASTER_NUM, MPU6050_ADDR);
+    if (mpu) {
+        mpu6050_wake_up(mpu);
+        mpu6050_config(mpu, ACCE_FS_4G, GYRO_FS_500DPS);
+        mahony_init(&filter, 2.0f, 0.005f);
+        ESP_LOGI(TAG, "MPU6050 initialized at 0x%02X", MPU6050_ADDR);
+    } else {
+        ESP_LOGE(TAG, "Failed to initialize MPU6050!");
+    }
+}
+
+// MPU6050 reading task
+static void mpu6050_reader_task(void *pvParameters) {
+    mpu6050_acce_value_t acce;
+    mpu6050_gyro_value_t gyro;
+    uint32_t last_time = 0;
+    
+    ESP_LOGI(TAG, "Starting MPU6050 reading task");
+    
+    while (1) {
+        if (mpu6050_get_acce(mpu, &acce) == ESP_OK && 
+            mpu6050_get_gyro(mpu, &gyro) == ESP_OK) {
+            
+            uint32_t now = esp_timer_get_time();
+            float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+            last_time = now;
+            
+            float gx = gyro.gyro_x * M_PI / 180.0f;
+            float gy = gyro.gyro_y * M_PI / 180.0f;
+            float gz = gyro.gyro_z * M_PI / 180.0f;
+            
+            mahony_update_fast(&filter, gx, gy, gz, 
+                             acce.acce_x, acce.acce_y, acce.acce_z, dt);
+            
+            float yaw = quaternion_to_yaw(filter.q0, filter.q1, filter.q2, filter.q3);
+            
+            if (calibrated) {
+                update_yaw_tracking(yaw);
+                
+                // Display angle info (optional, for debugging)
+                static int counter = 0;
+                counter++;
+                if (counter >= 100) {
+                    ESP_LOGI(TAG, "Yaw: %.1f°, Total: %.1f°", yaw, yaw_total);
+                    counter = 0;
+                }
+            }
+        }
+        
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+}
+
+void app_main(void) {
+    ESP_LOGI(TAG, "Starting MPU68 Client...");
+    
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+    
+    // Initialize I2C
+    i2c_master_init();
+    
+    // Initialize MPU6050
+    mpu6050_init();
+    if (!mpu) return;
+    
+    // Initialize WiFi
+    wifi_init_sta();
+    
+    // Wait for WiFi connection
+    ESP_LOGI(TAG, "Waiting for WiFi connection...");
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, 
+                                          WIFI_CONNECTED_BIT, 
+                                          pdFALSE, pdTRUE, portMAX_DELAY);
+    
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "WiFi connected successfully");
+    }
+    
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    // Calibrate MPU6050
+    calibrate_yaw();
+    
+    // Start tasks
+    xTaskCreate(mpu6050_reader_task, "mpu6050_reader", 4096, NULL, 5, NULL);
+    xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 4, NULL);
+    
+    ESP_LOGI(TAG, "System ready! Sending yaw data to ESP32_2");
+}

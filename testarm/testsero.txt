@@ -1,0 +1,371 @@
+#include <stdio.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_log.h"
+#include "driver/i2c.h"
+#include "driver/uart.h"
+#include "esp_vfs_dev.h"
+
+// Địa chỉ PCA9685 mặc định
+#define PCA9685_ADDR          0x40
+#define I2C_MASTER_NUM        I2C_NUM_0
+#define I2C_MASTER_FREQ_HZ    400000
+#define I2C_MASTER_SDA_IO     21
+#define I2C_MASTER_SCL_IO     22
+
+// UART Configuration
+#define UART_NUM              UART_NUM_0
+#define BUF_SIZE              (1024)
+
+// Các thanh ghi PCA9685
+#define PCA9685_MODE1         0x00
+#define PCA9685_PRESCALE      0xFE
+#define PCA9685_LED0_ON_L     0x06
+
+// Tần số servo (50Hz)
+#define SERVO_FREQ            50
+
+static const char *TAG = "PCA9685_TESTER";
+
+// Biến toàn cục
+static uint8_t current_channel = 0;
+
+// Hàm ghi thanh ghi PCA9685
+esp_err_t pca9685_write_byte(uint8_t reg, uint8_t value) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (PCA9685_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write_byte(cmd, value, true);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+// Khởi tạo I2C
+void i2c_master_init() {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
+    ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0));
+    ESP_LOGI(TAG, "I2C initialized successfully");
+}
+
+// Khởi tạo PCA9685
+esp_err_t pca9685_init() {
+    ESP_LOGI(TAG, "Initializing PCA9685...");
+    
+    // Reset
+    pca9685_write_byte(PCA9685_MODE1, 0x00);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    
+    // Set mode1 để sleep
+    pca9685_write_byte(PCA9685_MODE1, 0x10);  // Sleep mode
+    
+    // Set prescaler cho tần số 50Hz
+    uint8_t prescale = (uint8_t)((25000000.0 / (4096.0 * SERVO_FREQ)) - 0.5);
+    ESP_LOGI(TAG, "Prescale value: %d", prescale);
+    pca9685_write_byte(PCA9685_PRESCALE, prescale);
+    
+    // Wake up
+    pca9685_write_byte(PCA9685_MODE1, 0x00);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    
+    // Set mode1 với auto-increment
+    pca9685_write_byte(PCA9685_MODE1, 0xA0);  // Auto-increment, restart
+    
+    ESP_LOGI(TAG, "PCA9685 initialized");
+    return ESP_OK;
+}
+
+// Đặt xung PWM cho kênh servo
+void set_pwm(uint8_t channel, uint16_t on_time, uint16_t off_time) {
+    if (channel > 15) return;
+    
+    uint8_t reg = PCA9685_LED0_ON_L + 4 * channel;
+    
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (PCA9685_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write_byte(cmd, (on_time & 0xFF), true);         // ON_L
+    i2c_master_write_byte(cmd, (on_time >> 8), true);           // ON_H
+    i2c_master_write_byte(cmd, (off_time & 0xFF), true);        // OFF_L
+    i2c_master_write_byte(cmd, (off_time >> 8), true);          // OFF_H
+    i2c_master_stop(cmd);
+    
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set PWM on channel %d", channel);
+    }
+    i2c_cmd_link_delete(cmd);
+}
+
+// Điều khiển servo với xung tính bằng micro giây
+void set_servo_pulse(uint8_t channel, uint16_t pulse_us) {
+    if (channel > 15) return;
+    
+    // Tính toán giá trị PWM
+    // 4096 steps, 20ms period (50Hz)
+    float pulse_length = 1000000.0 / SERVO_FREQ;  // 20,000 µs
+    float pulse = pulse_us;
+    pulse /= pulse_length / 4096.0;
+    
+    uint16_t pwm_value = (uint16_t)pulse;
+    
+    // Đặt ON = 0, OFF = pwm_value
+    set_pwm(channel, 0, pwm_value);
+    
+    ESP_LOGI(TAG, "Channel %d: Pulse = %d us, PWM = %d", 
+             channel, pulse_us, pwm_value);
+}
+
+// CÁCH 1: TẮT HOÀN TOÀN KÊNH PWM
+void stop_channel(uint8_t channel) {
+    if (channel > 15) return;
+    
+    // Đặt ON và OFF đều bằng 0 sẽ tắt hoàn toàn PWM
+    // ON=0, OFF=0 nghĩa là luôn ở mức LOW
+    set_pwm(channel, 0, 0);
+    
+    printf("Channel %d STOPPED (PWM off)\n", channel);
+}
+
+// CÁCH 2: ĐẶT XUNG VỀ 0 (0% duty cycle)
+void zero_pulse(uint8_t channel) {
+    if (channel > 15) return;
+    
+    // Đặt OFF = 0 (duty cycle 0%)
+    set_pwm(channel, 0, 0);
+    
+    printf("Channel %d: Zero pulse (0%% duty cycle)\n", channel);
+}
+
+// CÁCH 3: ĐẶT XUNG RẤT NHỎ (để servo "thả lỏng")
+void release_servo(uint8_t channel) {
+    if (channel > 15) return;
+    
+    // Một số servo cần xung rất nhỏ để thả lỏng
+    // Đây là giá trị tối thiểu (thường < 500µs)
+    set_servo_pulse(channel, 100);  // 100µs - rất nhỏ
+    
+    printf("Channel %d: Servo released (100us pulse)\n", channel);
+}
+
+// CÁCH 4: TẮT TẤT CẢ CÁC KÊNH
+void stop_all_channels() {
+    for (uint8_t ch = 0; ch < 16; ch++) {
+        stop_channel(ch);
+    }
+    printf("All channels stopped\n");
+}
+
+// Hiển thị menu
+void show_menu() {
+    printf("\n\n=================================\n");
+    printf("   PCA9685 SERVO CONTROL v2.0   \n");
+    printf("=================================\n");
+    printf("Current channel: %d\n", current_channel);
+    printf("Commands:\n");
+    printf("  0-15    : Switch to channel\n");
+    printf("  t       : Test channel sequence\n");
+    printf("  p N     : Set pulse (N in us, 500-2500)\n");
+    printf("  s       : STOP current channel\n");
+    printf("  a       : STOP ALL channels\n");
+    printf("  r       : RELEASE servo (min pulse)\n");
+    printf("  c       : Center (1500us)\n");
+    printf("  ?       : Show this menu\n");
+    printf("=================================\n");
+    printf("Enter command: ");
+}
+
+// Test một kênh cụ thể
+void test_channel(uint8_t channel) {
+    if (channel > 15) return;
+    
+    printf("\n=== Testing Channel %d ===\n", channel);
+    
+    // Các vị trí test cơ bản
+    uint16_t test_positions[] = {500, 1500, 2500, 1500};
+    const char* position_names[] = {"0°", "90°", "180°", "Center"};
+    
+    for (int i = 0; i < 4; i++) {
+        printf("Moving to %s (%d us)...\n", position_names[i], test_positions[i]);
+        set_servo_pulse(channel, test_positions[i]);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    
+    printf("Test completed for channel %d\n", channel);
+}
+
+// Xử lý lệnh từ người dùng
+void process_command(char* cmd) {
+    // Xóa ký tự xuống dòng
+    cmd[strcspn(cmd, "\r\n")] = 0;
+    
+    if (strlen(cmd) == 0) return;
+    
+    printf("\n");
+    
+    // Xử lý lệnh số đơn (0-15)
+    if (strlen(cmd) == 1 && cmd[0] >= '0' && cmd[0] <= '9') {
+        uint8_t new_channel = cmd[0] - '0';
+        current_channel = new_channel;
+        printf("Switched to channel %d\n", current_channel);
+        printf("Servo should be STOPPED. Connect servo and use 't' to test.\n");
+        // Dừng kênh mới khi chuyển
+        stop_channel(current_channel);
+        return;
+    }
+    
+    // Xử lý lệnh số 2 chữ số (10-15)
+    if (strlen(cmd) == 2 && cmd[0] >= '0' && cmd[0] <= '1' && cmd[1] >= '0' && cmd[1] <= '9') {
+        uint8_t new_channel = atoi(cmd);
+        if (new_channel <= 15) {
+            current_channel = new_channel;
+            printf("Switched to channel %d\n", current_channel);
+            printf("Servo should be STOPPED. Connect servo and use 't' to test.\n");
+            stop_channel(current_channel);
+            return;
+        }
+    }
+    
+    // Xử lý lệnh chữ đơn
+    switch(cmd[0]) {
+        case 't':
+        case 'T':
+            printf("Testing channel %d\n", current_channel);
+            test_channel(current_channel);
+            break;
+            
+        case 'c':
+        case 'C':
+            printf("Centering servo on channel %d\n", current_channel);
+            set_servo_pulse(current_channel, 1500);
+            break;
+            
+        case 's':
+        case 'S':
+            printf("Stopping channel %d\n", current_channel);
+            stop_channel(current_channel);
+            break;
+            
+        case 'a':
+        case 'A':
+            printf("Stopping ALL channels\n");
+            stop_all_channels();
+            break;
+            
+        case 'r':
+        case 'R':
+            printf("Releasing servo on channel %d\n", current_channel);
+            release_servo(current_channel);
+            break;
+            
+        case 'p':
+        case 'P':
+            {
+                // Lấy số sau chữ 'p'
+                char* pulse_str = cmd + 1;
+                // Bỏ qua khoảng trắng
+                while (*pulse_str == ' ') pulse_str++;
+                
+                if (strlen(pulse_str) > 0) {
+                    uint16_t pulse = atoi(pulse_str);
+                    if (pulse >= 500 && pulse <= 2500) {
+                        printf("Setting pulse to %d us on channel %d\n", pulse, current_channel);
+                        set_servo_pulse(current_channel, pulse);
+                    } else if (pulse == 0) {
+                        printf("Setting pulse to 0 (stopping) on channel %d\n", current_channel);
+                        stop_channel(current_channel);
+                    } else {
+                        printf("Invalid pulse! Use 0 to stop or 500-2500 us\n");
+                    }
+                } else {
+                    printf("Usage: p <pulse> (0 to stop, 500-2500 us)\n");
+                }
+            }
+            break;
+            
+        case '?':
+            show_menu();
+            break;
+            
+        default:
+            printf("Unknown command: %s\n", cmd);
+            printf("Type '?' for help\n");
+            break;
+    }
+}
+
+// Khởi tạo UART
+void uart_init() {
+    uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_APB,
+    };
+    
+    ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(UART_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, 
+                                 UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    ESP_ERROR_CHECK(uart_driver_install(UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
+    
+    // Chuyển hướng stdin/stdout sang UART
+    esp_vfs_dev_uart_use_driver(UART_NUM);
+    esp_vfs_dev_uart_port_set_rx_line_endings(UART_NUM, ESP_LINE_ENDINGS_CR);
+    esp_vfs_dev_uart_port_set_tx_line_endings(UART_NUM, ESP_LINE_ENDINGS_CRLF);
+    
+    ESP_LOGI(TAG, "UART initialized");
+}
+
+void app_main() {
+    ESP_LOGI(TAG, "Starting PCA9685 Servo Controller with STOP function");
+    
+    // Khởi tạo UART
+    uart_init();
+    
+    // Khởi tạo I2C
+    i2c_master_init();
+    
+    // Khởi tạo PCA9685
+    esp_err_t ret = pca9685_init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize PCA9685");
+        return;
+    }
+    
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    // Dừng tất cả các kênh khi khởi động
+    stop_all_channels();
+    
+    // Hiển thị menu
+    show_menu();
+    
+    // Buffer cho UART
+    char cmd[32];
+    
+    while (1) {
+        printf("ch%d> ", current_channel);
+        
+        // Đọc lệnh từ UART
+        if (fgets(cmd, sizeof(cmd), stdin) != NULL) {
+            process_command(cmd);
+        }
+        
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+}

@@ -1,0 +1,427 @@
+#include <stdio.h>
+#include <math.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/i2c.h"
+#include "esp_log.h"
+#include "mpu6050.h"
+
+static const char *TAG = "MPU6050_FAST";
+
+// Cấu hình I2C
+#define I2C_MASTER_SCL_IO    22
+#define I2C_MASTER_SDA_IO    21
+#define I2C_MASTER_NUM       I2C_NUM_0
+#define MPU6050_ADDR         MPU6050_I2C_ADDRESS
+
+// Bộ lọc MAHONY (nhanh, nhẹ, chính xác)
+typedef struct {
+    float q0, q1, q2, q3;  // Quaternion
+    float integralFBx, integralFBy, integralFBz;  // Tích phân
+    float Ki;  // Hệ số tích phân
+    float Kp;  // Hệ số tỉ lệ
+} MahonyFilter;
+
+// Biến toàn cục
+static mpu6050_handle_t mpu6050 = NULL;
+static MahonyFilter filter;
+static float roll = 0, pitch = 0, yaw = 0;
+
+// Khởi tạo bộ lọc Mahony
+static void mahony_init(MahonyFilter *f, float Kp_val, float Ki_val) {
+    f->q0 = 1.0f;
+    f->q1 = 0.0f;
+    f->q2 = 0.0f;
+    f->q3 = 0.0f;
+    f->integralFBx = 0.0f;
+    f->integralFBy = 0.0f;
+    f->integralFBz = 0.0f;
+    f->Kp = Kp_val;
+    f->Ki = Ki_val;
+}
+
+// Cập nhật bộ lọc Mahony (NHANH và CHÍNH XÁC)
+static void mahony_update(MahonyFilter *f, 
+                         float gx, float gy, float gz,  // Gyro (rad/s)
+                         float ax, float ay, float az,  // Accel (g)
+                         float dt) {                    // Thời gian delta (s)
+    
+    float recipNorm;
+    float vx, vy, vz;
+    float ex, ey, ez;
+    
+    // Chuẩn hóa gia tốc kế
+    recipNorm = 1.0f / sqrt(ax * ax + ay * ay + az * az);
+    ax *= recipNorm;
+    ay *= recipNorm;
+    az *= recipNorm;
+    
+    // Ước lượng hướng trọng lực từ quaternion
+    vx = 2.0f * (f->q1 * f->q3 - f->q0 * f->q2);
+    vy = 2.0f * (f->q0 * f->q1 + f->q2 * f->q3);
+    vz = f->q0 * f->q0 - f->q1 * f->q1 - f->q2 * f->q2 + f->q3 * f->q3;
+    
+    // Lỗi ước lượng
+    ex = (ay * vz - az * vy);
+    ey = (az * vx - ax * vz);
+    ez = (ax * vy - ay * vx);
+    
+    // Tích phân lỗi
+    if (f->Ki > 0.0f) {
+        f->integralFBx += f->Ki * ex * dt;
+        f->integralFBy += f->Ki * ey * dt;
+        f->integralFBz += f->Ki * ez * dt;
+        
+        // Áp dụng hiệu chỉnh tích phân
+        gx += f->integralFBx;
+        gy += f->integralFBy;
+        gz += f->integralFBz;
+    }
+    
+    // Áp dụng hiệu chỉnh tỉ lệ
+    gx += f->Kp * ex;
+    gy += f->Kp * ey;
+    gz += f->Kp * ez;
+    
+    // Tích phân quaternion
+    gx *= 0.5f * dt;
+    gy *= 0.5f * dt;
+    gz *= 0.5f * dt;
+    
+    float qa = f->q0;
+    float qb = f->q1;
+    float qc = f->q2;
+    
+    f->q0 += (-qb * gx - qc * gy - f->q3 * gz);
+    f->q1 += (qa * gx + qc * gz - f->q3 * gy);
+    f->q2 += (qa * gy - qb * gz + f->q3 * gx);
+    f->q3 += (qa * gz + qb * gy - qc * gx);
+    
+    // Chuẩn hóa quaternion
+    recipNorm = 1.0f / sqrt(f->q0 * f->q0 + f->q1 * f->q1 + 
+                           f->q2 * f->q2 + f->q3 * f->q3);
+    f->q0 *= recipNorm;
+    f->q1 *= recipNorm;
+    f->q2 *= recipNorm;
+    f->q3 *= recipNorm;
+}
+
+// Chuyển quaternion sang góc Euler (Roll, Pitch, Yaw)
+static void quaternion_to_euler(float q0, float q1, float q2, float q3,
+                               float *roll, float *pitch, float *yaw) {
+    // Roll (x-axis rotation)
+    float sinr_cosp = 2.0f * (q0 * q1 + q2 * q3);
+    float cosr_cosp = 1.0f - 2.0f * (q1 * q1 + q2 * q2);
+    *roll = atan2f(sinr_cosp, cosr_cosp) * 180.0f / M_PI;
+    
+    // Pitch (y-axis rotation)
+    float sinp = 2.0f * (q0 * q2 - q3 * q1);
+    if (fabs(sinp) >= 1.0f)
+        *pitch = copysignf(M_PI / 2.0f, sinp) * 180.0f / M_PI;
+    else
+        *pitch = asinf(sinp) * 180.0f / M_PI;
+    
+    // Yaw (z-axis rotation)
+    float siny_cosp = 2.0f * (q0 * q3 + q1 * q2);
+    float cosy_cosp = 1.0f - 2.0f * (q2 * q2 + q3 * q3);
+    *yaw = atan2f(siny_cosp, cosy_cosp) * 180.0f / M_PI;
+}
+
+// Bộ lọc Complementary đơn giản (RẤT NHANH)
+static void complementary_filter_update(float *angle, float accel_angle, 
+                                       float gyro_rate, float dt, float alpha) {
+    *angle = alpha * (*angle + gyro_rate * dt) + (1.0f - alpha) * accel_angle;
+}
+
+// Hàm khởi tạo I2C (cùng như trước)
+static void i2c_master_init(void) {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = 400000,  // Tăng lên 400kHz cho nhanh
+    };
+    
+    i2c_param_config(I2C_MASTER_NUM, &conf);
+    i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
+}
+
+// Hàm khởi tạo MPU6050
+static void mpu6050_init(void) {
+    mpu6050 = mpu6050_create(I2C_MASTER_NUM, MPU6050_ADDR);
+    if (mpu6050) {
+        mpu6050_wake_up(mpu6050);
+        mpu6050_config(mpu6050, ACCE_FS_4G, GYRO_FS_500DPS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+// OPTION 1: BỘ LỌC COMPLEMENTARY ĐƠN GIẢN (NHANH NHẤT)
+static void fast_complementary_filter_task(void *pvParameters) {
+    mpu6050_acce_value_t acce;
+    mpu6050_gyro_value_t gyro;
+    
+    // Góc đã lọc
+    float roll_f = 0, pitch_f = 0, yaw_f = 0;
+    
+    // Tham số bộ lọc (alpha càng gần 1 càng tin gyro nhiều hơn)
+    float alpha = 0.96f;  // Tin gyro 96%, accel 4%
+    
+    uint32_t last_time = 0;
+    int display_count = 0;
+    
+    ESP_LOGI(TAG, "Bộ lọc Complementary (alpha=%.2f)", alpha);
+    
+    while (1) {
+        // Đọc cảm biến
+        if (mpu6050_get_acce(mpu6050, &acce) != ESP_OK ||
+            mpu6050_get_gyro(mpu6050, &gyro) != ESP_OK) {
+            vTaskDelay(1);
+            continue;
+        }
+        
+        // Tính thời gian delta (micro giây)
+        uint32_t now = esp_timer_get_time();
+        float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+        last_time = now;
+        
+        // Tính góc từ gia tốc kế (Roll và Pitch)
+        float accel_roll = atan2f(acce.acce_y, acce.acce_z) * 180.0f / M_PI;
+        float denom = sqrtf(acce.acce_y * acce.acce_y + acce.acce_z * acce.acce_z);
+        if (denom < 0.001f) denom = 0.001f;
+        float accel_pitch = atan2f(-acce.acce_x, denom) * 180.0f / M_PI;
+        
+        // Chuyển gyro từ độ/s sang rad/s
+        float gyro_roll = gyro.gyro_x * M_PI / 180.0f;
+        float gyro_pitch = gyro.gyro_y * M_PI / 180.0f;
+        float gyro_yaw = gyro.gyro_z * M_PI / 180.0f;
+        
+        // Áp dụng bộ lọc Complementary
+        complementary_filter_update(&roll_f, accel_roll, gyro_roll, dt, alpha);
+        complementary_filter_update(&pitch_f, accel_pitch, gyro_pitch, dt, alpha);
+        
+        // Yaw chỉ có thể tính từ gyro (tích phân)
+        yaw_f += gyro_yaw * dt * 180.0f / M_PI;
+        
+        // Giới hạn góc từ -180 đến 180 độ
+        if (roll_f > 180.0f) roll_f -= 360.0f;
+        if (roll_f < -180.0f) roll_f += 360.0f;
+        if (pitch_f > 180.0f) pitch_f -= 360.0f;
+        if (pitch_f < -180.0f) pitch_f += 360.0f;
+        if (yaw_f > 180.0f) yaw_f -= 360.0f;
+        if (yaw_f < -180.0f) yaw_f += 360.0f;
+        
+        // Hiển thị mỗi 100 lần đọc (~200Hz → hiển thị 2Hz)
+        display_count++;
+        if (display_count >= 100) {
+            printf("R:%6.1f P:%6.1f Y:%6.1f (Hz:%.0f)\n", 
+                   roll_f, pitch_f, yaw_f, 1.0f/dt);
+            display_count = 0;
+        }
+        
+        // KHÔNG DELAY - chạy ở tốc độ tối đa
+    }
+}
+
+// OPTION 2: BỘ LỌC MAHONY (Cân bằng giữa tốc độ và độ chính xác)
+static void mahony_filter_task(void *pvParameters) {
+    mpu6050_acce_value_t acce;
+    mpu6050_gyro_value_t gyro;
+    
+    // Khởi tạo bộ lọc Mahony
+    // Kp: 2.0f (tỉ lệ), Ki: 0.005f (tích phân) - điều chỉnh theo ứng dụng
+    mahony_init(&filter, 2.0f, 0.005f);
+    
+    uint32_t last_time = 0;
+    int display_count = 0;
+    
+    ESP_LOGI(TAG, "Bộ lọc Mahony (Kp=2.0, Ki=0.005)");
+    
+    while (1) {
+        // Đọc cảm biến
+        if (mpu6050_get_acce(mpu6050, &acce) != ESP_OK ||
+            mpu6050_get_gyro(mpu6050, &gyro) != ESP_OK) {
+            vTaskDelay(1);
+            continue;
+        }
+        
+        // Tính thời gian delta
+        uint32_t now = esp_timer_get_time();
+        float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+        last_time = now;
+        
+        // Chuyển gyro từ độ/s sang rad/s
+        float gx = gyro.gyro_x * M_PI / 180.0f;
+        float gy = gyro.gyro_y * M_PI / 180.0f;
+        float gz = gyro.gyro_z * M_PI / 180.0f;
+        
+        // Cập nhật bộ lọc Mahony
+        mahony_update(&filter, gx, gy, gz, 
+                     acce.acce_x, acce.acce_y, acce.acce_z, 
+                     dt);
+        
+        // Chuyển quaternion sang góc Euler
+        quaternion_to_euler(filter.q0, filter.q1, filter.q2, filter.q3,
+                          &roll, &pitch, &yaw);
+        
+        // Hiển thị mỗi 100 lần đọc
+        display_count++;
+        if (display_count >= 100) {
+            printf("Mahony - R:%6.1f P:%6.1f Y:%6.1f (Hz:%.0f)\n", 
+                   roll, pitch, yaw, 1.0f/dt);
+            display_count = 0;
+        }
+        
+        // KHÔNG DELAY - chạy ở tốc độ tối đa
+    }
+}
+
+// OPTION 3: Kết hợp đọc và xử lý với tốc độ CỐ ĐỊNH (ổn định)
+static void fixed_rate_filter_task(void *pvParameters) {
+    mpu6050_acce_value_t acce;
+    mpu6050_gyro_value_t gyro;
+    
+    // Góc đã lọc
+    float roll_f = 0, pitch_f = 0, yaw_f = 0;
+    
+    // Tần số cố định (200Hz = 5ms)
+    const float target_dt = 0.005f;  // 5ms
+    const TickType_t xDelay = target_dt * 1000 / portTICK_PERIOD_MS;
+    
+    // Bộ đệm để tính trung bình
+    #define BUFFER_SIZE 10
+    float roll_buffer[BUFFER_SIZE] = {0};
+    float pitch_buffer[BUFFER_SIZE] = {0};
+    float yaw_buffer[BUFFER_SIZE] = {0};
+    int buffer_index = 0;
+    
+    ESP_LOGI(TAG, "Bộ lọc Complementary + Trung bình @%.0fHz", 1.0f/target_dt);
+    
+    while (1) {
+        // Đọc cảm biến
+        if (mpu6050_get_acce(mpu6050, &acce) == ESP_OK &&
+            mpu6050_get_gyro(mpu6050, &gyro) == ESP_OK) {
+            
+            // Tính góc từ gia tốc
+            float accel_roll = atan2f(acce.acce_y, acce.acce_z) * 180.0f / M_PI;
+            float denom = sqrtf(acce.acce_y * acce.acce_y + acce.acce_z * acce.acce_z);
+            if (denom < 0.001f) denom = 0.001f;
+            float accel_pitch = atan2f(-acce.acce_x, denom) * 180.0f / M_PI;
+            
+            // Gyro rad/s
+            float gyro_roll = gyro.gyro_x * M_PI / 180.0f;
+            float gyro_pitch = gyro.gyro_y * M_PI / 180.0f;
+            float gyro_yaw = gyro.gyro_z * M_PI / 180.0f;
+            
+            // Complementary filter (alpha = 0.96)
+            roll_f = 0.96f * (roll_f + gyro_roll * target_dt) + 0.04f * accel_roll;
+            pitch_f = 0.96f * (pitch_f + gyro_pitch * target_dt) + 0.04f * accel_pitch;
+            yaw_f += gyro_yaw * target_dt * 180.0f / M_PI;
+            
+            // Lưu vào buffer để trung bình
+            roll_buffer[buffer_index] = roll_f;
+            pitch_buffer[buffer_index] = pitch_f;
+            yaw_buffer[buffer_index] = yaw_f;
+            buffer_index = (buffer_index + 1) % BUFFER_SIZE;
+            
+            // Tính trung bình
+            float avg_roll = 0, avg_pitch = 0, avg_yaw = 0;
+            for (int i = 0; i < BUFFER_SIZE; i++) {
+                avg_roll += roll_buffer[i];
+                avg_pitch += pitch_buffer[i];
+                avg_yaw += yaw_buffer[i];
+            }
+            avg_roll /= BUFFER_SIZE;
+            avg_pitch /= BUFFER_SIZE;
+            avg_yaw /= BUFFER_SIZE;
+            
+            // Giới hạn góc
+            if (avg_roll > 180.0f) avg_roll -= 360.0f;
+            if (avg_roll < -180.0f) avg_roll += 360.0f;
+            if (avg_pitch > 180.0f) avg_pitch -= 360.0f;
+            if (avg_pitch < -180.0f) avg_pitch += 360.0f;
+            if (avg_yaw > 180.0f) avg_yaw -= 360.0f;
+            if (avg_yaw < -180.0f) avg_yaw += 360.0f;
+            
+            // Hiển thị mỗi 0.5 giây (10 lần @200Hz)
+            static int count = 0;
+            count++;
+            if (count >= 100) {  // 100 * 5ms = 500ms
+                printf("R:%6.1f P:%6.1f Y:%6.1f\n", avg_roll, avg_pitch, avg_yaw);
+                count = 0;
+            }
+        }
+        
+        // Delay cố định để đảm bảo tần số
+        vTaskDelay(xDelay);
+    }
+}
+
+// OPTION 4: Tích hợp sẵn Complementary từ thư viện MPU6050
+static void builtin_complementary_task(void *pvParameters) {
+    mpu6050_acce_value_t acce;
+    mpu6050_gyro_value_t gyro;
+    complimentary_angle_t angle;
+    
+    // Sử dụng hàm có sẵn trong thư viện
+    ESP_LOGI(TAG, "Sử dụng bộ lọc Complementary tích hợp");
+    
+    while (1) {
+        if (mpu6050_get_acce(mpu6050, &acce) == ESP_OK &&
+            mpu6050_get_gyro(mpu6050, &gyro) == ESP_OK) {
+            
+            // Sử dụng hàm có sẵn
+            mpu6050_complimentory_filter(mpu6050, &acce, &gyro, &angle);
+            
+            // Hiển thị mỗi 0.2 giây
+            static int count = 0;
+            count++;
+            if (count >= 20) {  // 20 * 10ms = 200ms
+                printf("Comp - R:%6.1f P:%6.1f\n", angle.roll, angle.pitch);
+                count = 0;
+            }
+        }
+        
+        vTaskDelay(10 / portTICK_PERIOD_MS);  // 100Hz
+    }
+}
+
+void app_main(void) {
+    ESP_LOGI(TAG, "Bắt đầu đọc MPU6050 với bộ lọc NHANH");
+    
+    // Khởi tạo I2C
+    i2c_master_init();
+    
+    // Khởi tạo MPU6050
+    mpu6050_init();
+    
+    if (mpu6050 == NULL) {
+        ESP_LOGE(TAG, "Không thể khởi tạo MPU6050");
+        return;
+    }
+    
+    // Chờ 1 giây để ổn định
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI(TAG, "Chọn bộ lọc:");
+    ESP_LOGI(TAG, "1. Complementary Filter (nhanh nhất)");
+    ESP_LOGI(TAG, "2. Mahony Filter (cân bằng)");
+    ESP_LOGI(TAG, "3. Fixed Rate với trung bình (ổn định)");
+    ESP_LOGI(TAG, "4. Complementary tích hợp (đơn giản)");
+    
+    // CHỌN MỘT TRONG CÁC OPTION DƯỚI ĐÂY:
+    
+    // Option 1: Complementary Filter (NHANH NHẤT)
+    xTaskCreate(fast_complementary_filter_task, "fast_comp", 4096, NULL, 5, NULL);
+    
+    // Option 2: Mahony Filter (cân bằng)
+    // xTaskCreate(mahony_filter_task, "mahony", 4096, NULL, 5, NULL);
+    
+    // Option 3: Fixed rate với trung bình (ỔN ĐỊNH)
+    // xTaskCreate(fixed_rate_filter_task, "fixed_rate", 4096, NULL, 5, NULL);
+    
+    // Option 4: Complementary tích hợp
+    // xTaskCreate(builtin_complementary_task, "builtin_comp", 4096, NULL, 5, NULL);
+}

@@ -1,0 +1,916 @@
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "freertos/queue.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_timer.h"
+#include "nvs_flash.h"
+#include "driver/i2c.h"
+#include "driver/adc.h"
+#include "mpu6050.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
+#include "lwip/sockets.h"
+#include "lwip/netdb.h"
+#include "esp_mac.h"  // Thêm header này
+
+
+static const char *TAG = "DUAL_MPU_CLIENT_AP";
+
+// AP configuration
+#define AP_SSID      "ESP32_HAND_CONTROLLER"
+#define AP_PASSWORD  "12345678"
+#define AP_CHANNEL   1
+#define MAX_STA_CONN 4
+
+// Server configuration
+#define SERVER_IP      "192.168.4.2"
+#define SERVER_PORT    1234
+
+// I2C configuration
+#define I2C_MASTER_SCL_IO    22
+#define I2C_MASTER_SDA_IO    21
+#define I2C_MASTER_NUM       I2C_NUM_0
+#define MPU6050_ADDR_68      0x68
+#define MPU6050_ADDR_69      0x69
+
+// Flex sensor ADC configuration
+#define FLEX1_PIN          ADC1_CHANNEL_7   // GPIO35 -> Servo 6
+#define FLEX2_PIN          ADC1_CHANNEL_6   // GPIO34 -> Servo 2
+
+// Ngưỡng flex sensor 1
+#define FLEX1_THRESHOLD_100   100
+#define FLEX1_THRESHOLD_400   400
+#define FLEX1_THRESHOLD_800   800
+
+// Ngưỡng flex sensor 2
+#define FLEX2_THRESHOLD_1500  1500
+#define FLEX2_THRESHOLD_1600  1600
+
+// Yaw thresholds for MPU68 (Servo 0)
+#define YAW_THRESHOLD_60     60.0f
+#define YAW_THRESHOLD_30     30.0f
+
+// Pitch thresholds for MPU68 (Servo 1)
+#define PITCH_THRESHOLD_1    5.0f    // -20° to 5° -> 'A' (180°)
+#define PITCH_THRESHOLD_2    40.0f   // 20.1° to 40° -> 'B' (150°)
+#define PITCH_THRESHOLD_3    55.0f   // 40.1° to 55° -> 'C' (120°)
+#define PITCH_THRESHOLD_4    90.0f   // 55.1° to 90° -> 'D' (90°)
+
+// Roll thresholds for MPU69 (Servo 4)
+#define ROLL_THRESHOLD_160   160.0f  // 0° servo
+#define ROLL_THRESHOLD_150   150.0f  // 0° servo
+#define ROLL_THRESHOLD_120   120.0f  // 45° servo
+#define ROLL_THRESHOLD_60    60.0f   // 135° servo
+#define ROLL_THRESHOLD_20    20.0f   // 180° servo
+
+// Pitch thresholds for MPU69 (Servo 5)
+#define PITCH69_DIFF_40      40.0f   // ±40° difference
+#define PITCH69_DIFF_20      20.0f   // ±20° difference
+
+// Filter parameters
+#define FILTER_SIZE         5
+#define MEDIAN_HISTORY_SIZE 3
+
+// AP event group
+static EventGroupHandle_t ap_event_group;
+#define AP_STARTED_BIT BIT0
+
+// Mahony filter structure
+typedef struct {
+    float q0, q1, q2, q3;
+    float Kp, Ki;
+    float integralFBx, integralFBy, integralFBz;
+} MahonyFilter;
+
+// Median filter for ADC
+typedef struct {
+    int buffer[FILTER_SIZE];
+    int index;
+    int sorted[FILTER_SIZE];
+} median_filter_t;
+
+// Command queue
+typedef struct {
+    char command;
+    uint32_t timestamp;
+} command_t;
+
+// Global variables for MPU68
+static mpu6050_handle_t mpu68 = NULL;
+static MahonyFilter filter68;
+static float yaw_total = 0;
+static float yaw_prev = 0;
+static float pitch_current = 0;
+static float pitch_reference = 0;
+static bool calibrated68 = false;
+
+// Global variables for MPU69
+static mpu6050_handle_t mpu69 = NULL;
+static MahonyFilter filter69;
+static float roll_current = 0;
+static float pitch69_current = 0;
+static float pitch69_reference = 0;
+static bool calibrated69 = false;
+
+// Flex sensor variables
+static median_filter_t flex1_filter, flex2_filter;
+
+// TCP socket and connection state
+static int sock = -1;
+static bool server_connected = false;
+static uint32_t last_connection_attempt = 0;
+static uint32_t last_heartbeat = 0;
+#define CONNECTION_RETRY_DELAY 2000
+#define HEARTBEAT_INTERVAL     5000
+
+// Last sent characters
+static char last_yaw_char = 'H';
+static char last_pitch_char = 'A';
+static char last_flex2_char = '5';
+static char last_roll_char = 'X';
+static char last_pitch69_char = 'U';
+static char last_flex1_char = '1';
+
+// Command queue
+static QueueHandle_t command_queue;
+#define COMMAND_QUEUE_SIZE 20
+
+// Function prototypes
+static void mahony_update_fast(MahonyFilter *f, float gx, float gy, float gz,
+                              float ax, float ay, float az, float dt);
+static bool connect_to_server(void);
+static bool send_command(char c);
+static void median_filter_init(median_filter_t *filter);
+static int median_filter(median_filter_t *filter, int new_value);
+
+// WiFi event handler for AP mode - SỬA LỖI Ở ĐÂY
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, 
+                               int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) {
+        ESP_LOGI(TAG, "AP started");
+        xEventGroupSetBits(ap_event_group, AP_STARTED_BIT);
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+        ESP_LOGI(TAG, "Station " MACSTR " joined, AID=%d", 
+                 MAC2STR(event->mac), event->aid);
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+        ESP_LOGI(TAG, "Station " MACSTR " left, AID=%d", 
+                 MAC2STR(event->mac), event->aid);
+    }
+}
+
+// IP event handler
+static void ip_event_handler(void* arg, esp_event_base_t event_base,
+                             int32_t event_id, void* event_data) {
+    if (event_base == IP_EVENT && event_id == IP_EVENT_AP_STAIPASSIGNED) {
+        ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*) event_data;
+        ESP_LOGI(TAG, "Station IP assigned: " IPSTR, IP2STR(&event->ip));
+    }
+}
+
+// AP initialization
+static void wifi_init_ap(void) {
+    ESP_LOGI(TAG, "Initializing AP mode...");
+    
+    ap_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    
+    // Create default AP interface
+    esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+    assert(ap_netif);
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    // Register event handlers
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                                                        IP_EVENT_AP_STAIPASSIGNED,
+                                                        &ip_event_handler,
+                                                        NULL,
+                                                        NULL));
+
+    // Configure AP
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = AP_SSID,
+            .password = AP_PASSWORD,
+            .ssid_len = strlen(AP_SSID),
+            .channel = AP_CHANNEL,
+            .max_connection = MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA2_PSK,
+            .pmf_cfg = {
+                .required = false,
+            },
+        },
+    };
+    
+    if (strlen(AP_PASSWORD) == 0) {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "AP initialization complete");
+    ESP_LOGI(TAG, "AP SSID: %s", AP_SSID);
+    ESP_LOGI(TAG, "AP Password: %s", AP_PASSWORD);
+    ESP_LOGI(TAG, "AP Channel: %d", AP_CHANNEL);
+}
+
+// Convert quaternion to Euler angles
+static void quaternion_to_euler(float q0, float q1, float q2, float q3,
+                               float *roll, float *pitch, float *yaw) {
+    // Roll (x-axis rotation)
+    float sinr_cosp = 2.0f * (q0 * q1 + q2 * q3);
+    float cosr_cosp = 1.0f - 2.0f * (q1 * q1 + q2 * q2);
+    *roll = atan2f(sinr_cosp, cosr_cosp) * 180.0f / M_PI;
+    
+    // Pitch (y-axis rotation)
+    float sinp = 2.0f * (q0 * q2 - q3 * q1);
+    if (fabs(sinp) >= 1.0f)
+        *pitch = copysignf(M_PI / 2.0f, sinp) * 180.0f / M_PI;
+    else
+        *pitch = asinf(sinp) * 180.0f / M_PI;
+    
+    // Yaw (z-axis rotation)
+    float siny_cosp = 2.0f * (q0 * q3 + q1 * q2);
+    float cosy_cosp = 1.0f - 2.0f * (q2 * q2 + q3 * q3);
+    *yaw = atan2f(siny_cosp, cosy_cosp) * 180.0f / M_PI;
+}
+
+// Track continuous yaw angle
+static void update_yaw_tracking(float current_yaw) {
+    float delta = current_yaw - yaw_prev;
+    
+    if (delta > 180.0f) {
+        delta -= 360.0f;
+    } else if (delta < -180.0f) {
+        delta += 360.0f;
+    }
+    
+    yaw_total += delta;
+    yaw_prev = current_yaw;
+}
+
+// Get Yaw character for MPU68 (Servo 0)
+static char get_yaw_char(float yaw) {
+    if (yaw < -YAW_THRESHOLD_60) {
+        return 'L';
+    } else if (yaw < -YAW_THRESHOLD_30) {
+        return 'l';
+    } else if (yaw > YAW_THRESHOLD_60) {
+        return 'R';
+    } else if (yaw > YAW_THRESHOLD_30) {
+        return 'r';
+    } else {
+        return 'H';
+    }
+}
+
+// Get Pitch character for MPU68 (Servo 1)
+static char get_pitch_char(float pitch) {
+    if (pitch >= -20.0f && pitch <= PITCH_THRESHOLD_1) {
+        return 'A';
+    } else if (pitch >= 20.1f && pitch <= PITCH_THRESHOLD_2) {
+        return 'B';
+    } else if (pitch >= 40.1f && pitch <= PITCH_THRESHOLD_3) {
+        return 'C';
+    } else if (pitch >= 55.1f && pitch <= PITCH_THRESHOLD_4) {
+        return 'D';
+    } else {
+        return last_pitch_char;
+    }
+}
+
+// Get Roll character for MPU69 (Servo 4)
+static char get_roll_char(float roll) {
+    if (roll < 0) {
+        roll += 360.0f;
+    }
+    
+    if ((roll >= 0.0f && roll <= 20.0f) || (roll >= 340.0f && roll <= 360.0f)) {
+        return 'V';
+    } else if (roll >= 21.0f && roll <= 60.0f) {
+        return 'W';
+    } else if (roll >= 61.0f && roll <= 119.0f) {
+        return 'Z';
+    } else if (roll >= 120.0f && roll <= 150.0f) {
+        return 'Y';
+    } else if ((roll >= 151.0f && roll <= 200.0f) || (roll >= 300.0f && roll <= 339.0f)) {
+        return 'X';
+    } else {
+        return last_roll_char;
+    }
+}
+
+// Get Pitch character for MPU69 (Servo 5)
+static char get_pitch69_char(float pitch_diff) {
+    if (pitch_diff > PITCH69_DIFF_40) {
+        return 'P';
+    } else if (pitch_diff > PITCH69_DIFF_20) {
+        return 'Q';
+    } else if (pitch_diff < -PITCH69_DIFF_40) {
+        return 'S';
+    } else if (pitch_diff < -PITCH69_DIFF_20) {
+        return 'T';
+    } else {
+        return 'U';
+    }
+}
+
+// Get Flex1 character (GPIO35 -> Servo 6)
+static char get_flex1_char(int value) {
+    if (value < FLEX1_THRESHOLD_100) {
+        return '1';
+    } else if (value < FLEX1_THRESHOLD_400) {
+        return '2';
+    } else if (value < FLEX1_THRESHOLD_800) {
+        return '3';
+    } else {
+        return '4';
+    }
+}
+
+// Get Flex2 character (GPIO34 -> Servo 2)
+static char get_flex2_char(int value) {
+    if (value < FLEX2_THRESHOLD_1500) {
+        return '5';
+    } else if (value < FLEX2_THRESHOLD_1600) {
+        return '6';
+    } else {
+        return '7';
+    }
+}
+
+// Initialize ADC for flex sensors
+static void flex_sensor_init(void) {
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(FLEX1_PIN, ADC_ATTEN_DB_11);
+    adc1_config_channel_atten(FLEX2_PIN, ADC_ATTEN_DB_11);
+    
+    median_filter_init(&flex1_filter);
+    median_filter_init(&flex2_filter);
+    
+    ESP_LOGI(TAG, "Flex sensors initialized on GPIO34,35");
+}
+
+// Initialize median filter
+static void median_filter_init(median_filter_t *filter) {
+    for (int i = 0; i < FILTER_SIZE; i++) {
+        filter->buffer[i] = 0;
+    }
+    filter->index = 0;
+}
+
+// Apply median filter
+static int median_filter(median_filter_t *filter, int new_value) {
+    filter->buffer[filter->index] = new_value;
+    filter->index = (filter->index + 1) % FILTER_SIZE;
+    
+    for (int i = 0; i < FILTER_SIZE; i++) {
+        filter->sorted[i] = filter->buffer[i];
+    }
+    
+    for (int i = 0; i < FILTER_SIZE - 1; i++) {
+        for (int j = i + 1; j < FILTER_SIZE; j++) {
+            if (filter->sorted[i] > filter->sorted[j]) {
+                int temp = filter->sorted[i];
+                filter->sorted[i] = filter->sorted[j];
+                filter->sorted[j] = temp;
+            }
+        }
+    }
+    
+    return filter->sorted[FILTER_SIZE / 2];
+}
+
+// Connect to TCP server with retry
+static bool connect_to_server(void) {
+    struct sockaddr_in server_addr;
+    
+    if (sock >= 0) {
+        close(sock);
+        sock = -1;
+    }
+    
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Unable to create socket");
+        return false;
+    }
+    
+    // Set timeout
+    struct timeval timeout;
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    
+    ESP_LOGI(TAG, "Connecting to server %s:%d...", SERVER_IP, SERVER_PORT);
+    
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+        ESP_LOGE(TAG, "Socket connect failed");
+        close(sock);
+        sock = -1;
+        return false;
+    }
+    
+    ESP_LOGI(TAG, "Connected to server successfully");
+    server_connected = true;
+    last_heartbeat = esp_timer_get_time() / 1000;
+    
+    // Send initialization commands
+    send_command('H');
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    send_command('A');
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    send_command('5');
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    send_command('X');
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    send_command('U');
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    send_command('1');
+    
+    // Reset last characters
+    last_yaw_char = 'H';
+    last_pitch_char = 'A';
+    last_flex2_char = '5';
+    last_roll_char = 'X';
+    last_pitch69_char = 'U';
+    last_flex1_char = '1';
+    
+    return true;
+}
+
+// Send command with retry
+static bool send_command(char c) {
+    if (!server_connected || sock < 0) {
+        return false;
+    }
+    
+    int retry_count = 0;
+    const int max_retries = 3;
+    
+    while (retry_count < max_retries) {
+        if (send(sock, &c, 1, 0) < 0) {
+            ESP_LOGE(TAG, "Failed to send command '%c' (attempt %d)", c, retry_count + 1);
+            retry_count++;
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+            
+            if (retry_count == max_retries) {
+                server_connected = false;
+                close(sock);
+                sock = -1;
+                ESP_LOGE(TAG, "Max retries reached, connection lost");
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Initialize Mahony filter
+static void mahony_init(MahonyFilter *f, float Kp_val, float Ki_val) {
+    f->q0 = 1.0f; f->q1 = 0.0f; f->q2 = 0.0f; f->q3 = 0.0f;
+    f->integralFBx = 0.0f; f->integralFBy = 0.0f; f->integralFBz = 0.0f;
+    f->Kp = Kp_val; f->Ki = Ki_val;
+}
+
+// Fast Mahony filter update
+static void mahony_update_fast(MahonyFilter *f, float gx, float gy, float gz,
+                              float ax, float ay, float az, float dt) {
+    float norm;
+    float vx, vy, vz;
+    float ex, ey, ez;
+    
+    norm = sqrtf(ax*ax + ay*ay + az*az);
+    if (norm < 0.001f) norm = 0.001f;
+    ax /= norm; ay /= norm; az /= norm;
+    
+    vx = 2.0f * (f->q1*f->q3 - f->q0*f->q2);
+    vy = 2.0f * (f->q0*f->q1 + f->q2*f->q3);
+    vz = f->q0*f->q0 - f->q1*f->q1 - f->q2*f->q2 + f->q3*f->q3;
+    
+    ex = (ay*vz - az*vy);
+    ey = (az*vx - ax*vz);
+    ez = (ax*vy - ay*vx);
+    
+    if (f->Ki > 0.0f) {
+        f->integralFBx += f->Ki * ex * dt;
+        f->integralFBy += f->Ki * ey * dt;
+        f->integralFBz += f->Ki * ez * dt;
+        gx += f->integralFBx; gy += f->integralFBy; gz += f->integralFBz;
+    }
+    
+    gx += f->Kp * ex; gy += f->Kp * ey; gz += f->Kp * ez;
+    
+    gx *= 0.5f * dt; gy *= 0.5f * dt; gz *= 0.5f * dt;
+    
+    float q0 = f->q0, q1 = f->q1, q2 = f->q2, q3 = f->q3;
+    f->q0 += (-q1*gx - q2*gy - q3*gz);
+    f->q1 += (q0*gx + q2*gz - q3*gy);
+    f->q2 += (q0*gy - q1*gz + q3*gx);
+    f->q3 += (q0*gz + q1*gy - q2*gx);
+    
+    norm = sqrtf(f->q0*f->q0 + f->q1*f->q1 + f->q2*f->q2 + f->q3*f->q3);
+    if (norm < 0.001f) norm = 0.001f;
+    f->q0 /= norm; f->q1 /= norm; f->q2 /= norm; f->q3 /= norm;
+}
+
+// Read and process flex sensors
+static void read_flex_sensors(char *flex1_char, char *flex2_char) {
+    static int flex1_history[MEDIAN_HISTORY_SIZE] = {0};
+    static int flex2_history[MEDIAN_HISTORY_SIZE] = {0};
+    static int history_index = 0;
+    
+    // Read raw values
+    int flex1_raw = adc1_get_raw(FLEX1_PIN);
+    int flex2_raw = adc1_get_raw(FLEX2_PIN);
+    
+    // Apply median filter
+    int flex1_filtered = median_filter(&flex1_filter, flex1_raw);
+    int flex2_filtered = median_filter(&flex2_filter, flex2_raw);
+    
+    // Store in history
+    flex1_history[history_index] = flex1_filtered;
+    flex2_history[history_index] = flex2_filtered;
+    history_index = (history_index + 1) % MEDIAN_HISTORY_SIZE;
+    
+    // Get median of history
+    int flex1_sorted[MEDIAN_HISTORY_SIZE];
+    int flex2_sorted[MEDIAN_HISTORY_SIZE];
+    
+    memcpy(flex1_sorted, flex1_history, sizeof(flex1_history));
+    memcpy(flex2_sorted, flex2_history, sizeof(flex2_history));
+    
+    // Sort
+    for (int i = 0; i < MEDIAN_HISTORY_SIZE - 1; i++) {
+        for (int j = i + 1; j < MEDIAN_HISTORY_SIZE; j++) {
+            if (flex1_sorted[i] > flex1_sorted[j]) {
+                int temp = flex1_sorted[i];
+                flex1_sorted[i] = flex1_sorted[j];
+                flex1_sorted[j] = temp;
+            }
+            if (flex2_sorted[i] > flex2_sorted[j]) {
+                int temp = flex2_sorted[i];
+                flex2_sorted[i] = flex2_sorted[j];
+                flex2_sorted[j] = temp;
+            }
+        }
+    }
+    
+    int flex1_value = flex1_sorted[MEDIAN_HISTORY_SIZE / 2];
+    int flex2_value = flex2_sorted[MEDIAN_HISTORY_SIZE / 2];
+    
+    // Get characters
+    *flex1_char = get_flex1_char(flex1_value);
+    *flex2_char = get_flex2_char(flex2_value);
+}
+
+// Main task
+static void main_task(void *pvParameters) {
+    mpu6050_acce_value_t acce68, acce69;
+    mpu6050_gyro_value_t gyro68, gyro69;
+    uint32_t last_time = 0;
+    float roll68, pitch68, yaw68;
+    float roll69, pitch69, yaw69;
+    char yaw_char, pitch_char, flex2_char, roll_char, pitch69_char, flex1_char;
+    
+    ESP_LOGI(TAG, "Starting sensor processing task");
+    
+    while (1) {
+        uint32_t current_time = esp_timer_get_time() / 1000;
+        
+        // Handle connection
+        if (!server_connected) {
+            if (current_time - last_connection_attempt > CONNECTION_RETRY_DELAY) {
+                ESP_LOGI(TAG, "Attempting to connect to server...");
+                if (connect_to_server()) {
+                    ESP_LOGI(TAG, "Server connection re-established");
+                } else {
+                    ESP_LOGE(TAG, "Failed to connect to server");
+                }
+                last_connection_attempt = current_time;
+            }
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        // Send heartbeat
+        if (current_time - last_heartbeat > HEARTBEAT_INTERVAL) {
+            if (!send_command('H')) {
+                ESP_LOGE(TAG, "Heartbeat failed, connection lost");
+                server_connected = false;
+            }
+            last_heartbeat = current_time;
+        }
+        
+        // Read MPU68
+        if (mpu6050_get_acce(mpu68, &acce68) != ESP_OK || 
+            mpu6050_get_gyro(mpu68, &gyro68) != ESP_OK) {
+            vTaskDelay(5 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        // Read MPU69
+        if (mpu6050_get_acce(mpu69, &acce69) != ESP_OK || 
+            mpu6050_get_gyro(mpu69, &gyro69) != ESP_OK) {
+            vTaskDelay(5 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        // Calculate delta time
+        uint32_t now = esp_timer_get_time();
+        float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+        last_time = now;
+        
+        // Process MPU68
+        float gx68 = gyro68.gyro_x * M_PI / 180.0f;
+        float gy68 = gyro68.gyro_y * M_PI / 180.0f;
+        float gz68 = gyro68.gyro_z * M_PI / 180.0f;
+        
+        mahony_update_fast(&filter68, gx68, gy68, gz68, 
+                         acce68.acce_x, acce68.acce_y, acce68.acce_z, dt);
+        
+        quaternion_to_euler(filter68.q0, filter68.q1, filter68.q2, filter68.q3,
+                          &roll68, &pitch68, &yaw68);
+        
+        if (calibrated68) {
+            update_yaw_tracking(yaw68);
+            pitch_current = pitch68;
+        }
+        
+        // Process MPU69
+        float gx69 = gyro69.gyro_x * M_PI / 180.0f;
+        float gy69 = gyro69.gyro_y * M_PI / 180.0f;
+        float gz69 = gyro69.gyro_z * M_PI / 180.0f;
+        
+        mahony_update_fast(&filter69, gx69, gy69, gz69, 
+                         acce69.acce_x, acce69.acce_y, acce69.acce_z, dt);
+        
+        quaternion_to_euler(filter69.q0, filter69.q1, filter69.q2, filter69.q3,
+                          &roll69, &pitch69, &yaw69);
+        
+        // Read flex sensors
+        read_flex_sensors(&flex1_char, &flex2_char);
+        
+        // Get command characters
+        if (calibrated68 && calibrated69) {
+            yaw_char = get_yaw_char(yaw_total);
+            pitch_char = get_pitch_char(pitch_current);
+            roll_char = get_roll_char(roll69);
+            
+            float pitch_diff = pitch69 - (pitch_reference + pitch69_reference);
+            pitch69_char = get_pitch69_char(pitch_diff);
+            
+            // Send commands if changed
+            if (yaw_char != last_yaw_char) {
+                if (send_command(yaw_char)) {
+                    last_yaw_char = yaw_char;
+                    ESP_LOGI(TAG, "Yaw: %c (%.1f°)", yaw_char, yaw_total);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+            
+            if (pitch_char != last_pitch_char) {
+                if (send_command(pitch_char)) {
+                    last_pitch_char = pitch_char;
+                    ESP_LOGI(TAG, "Pitch68: %c (%.1f°)", pitch_char, pitch_current);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+            
+            if (flex2_char != last_flex2_char) {
+                if (send_command(flex2_char)) {
+                    last_flex2_char = flex2_char;
+                    ESP_LOGI(TAG, "Flex2->Servo2: %c", flex2_char);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+            
+            if (roll_char != last_roll_char) {
+                if (send_command(roll_char)) {
+                    last_roll_char = roll_char;
+                    ESP_LOGI(TAG, "Roll69: %c (%.1f°)", roll_char, roll69);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+            
+            if (pitch69_char != last_pitch69_char) {
+                if (send_command(pitch69_char)) {
+                    last_pitch69_char = pitch69_char;
+                    ESP_LOGI(TAG, "Pitch69: %c (diff=%.1f°)", pitch69_char, pitch_diff);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+            
+            if (flex1_char != last_flex1_char) {
+                if (send_command(flex1_char)) {
+                    last_flex1_char = flex1_char;
+                    ESP_LOGI(TAG, "Flex1->Servo6: %c", flex1_char);
+                }
+                vTaskDelay(15 / portTICK_PERIOD_MS);
+            }
+        }
+        
+        vTaskDelay(40 / portTICK_PERIOD_MS);
+    }
+}
+
+// I2C initialization
+static void i2c_master_init(void) {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = 400000,
+    };
+    i2c_param_config(I2C_MASTER_NUM, &conf);
+    i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
+}
+
+// MPU6050 initialization
+static void mpu6050_init(void) {
+    // Initialize MPU68 (0x68)
+    mpu68 = mpu6050_create(I2C_MASTER_NUM, MPU6050_ADDR_68);
+    if (mpu68) {
+        mpu6050_wake_up(mpu68);
+        mpu6050_config(mpu68, ACCE_FS_4G, GYRO_FS_500DPS);
+        mahony_init(&filter68, 2.0f, 0.005f);
+        ESP_LOGI(TAG, "MPU6050 (68) initialized at 0x%02X", MPU6050_ADDR_68);
+    } else {
+        ESP_LOGE(TAG, "Failed to initialize MPU6050 (68)!");
+    }
+    
+    // Initialize MPU69 (0x69)
+    mpu69 = mpu6050_create(I2C_MASTER_NUM, MPU6050_ADDR_69);
+    if (mpu69) {
+        mpu6050_wake_up(mpu69);
+        mpu6050_config(mpu69, ACCE_FS_4G, GYRO_FS_500DPS);
+        mahony_init(&filter69, 2.0f, 0.005f);
+        ESP_LOGI(TAG, "MPU6050 (69) initialized at 0x%02X", MPU6050_ADDR_69);
+    } else {
+        ESP_LOGE(TAG, "Failed to initialize MPU6050 (69)!");
+    }
+}
+
+// Calibrate sensors
+static void calibrate_sensors() {
+    ESP_LOGI(TAG, "Calibrating both MPU6050 sensors...");
+    ESP_LOGI(TAG, "Hold sensors steady for 5 seconds");
+    
+    float yaw_sum68 = 0, pitch_sum68 = 0;
+    float roll_sum69 = 0, pitch_sum69 = 0;
+    int samples = 0;
+    uint32_t last_time = 0;
+    
+    uint32_t start_time = esp_timer_get_time();
+    while ((esp_timer_get_time() - start_time) < 5000000) {
+        mpu6050_acce_value_t acce68, acce69;
+        mpu6050_gyro_value_t gyro68, gyro69;
+        
+        if (mpu6050_get_acce(mpu68, &acce68) == ESP_OK && 
+            mpu6050_get_gyro(mpu68, &gyro68) == ESP_OK &&
+            mpu6050_get_acce(mpu69, &acce69) == ESP_OK && 
+            mpu6050_get_gyro(mpu69, &gyro69) == ESP_OK) {
+            
+            uint32_t now = esp_timer_get_time();
+            float dt = (last_time != 0) ? (now - last_time) / 1000000.0f : 0.001f;
+            last_time = now;
+            
+            // Update MPU68 filter
+            float gx68 = gyro68.gyro_x * M_PI / 180.0f;
+            float gy68 = gyro68.gyro_y * M_PI / 180.0f;
+            float gz68 = gyro68.gyro_z * M_PI / 180.0f;
+            
+            mahony_update_fast(&filter68, gx68, gy68, gz68, 
+                             acce68.acce_x, acce68.acce_y, acce68.acce_z, dt);
+            
+            // Update MPU69 filter
+            float gx69 = gyro69.gyro_x * M_PI / 180.0f;
+            float gy69 = gyro69.gyro_y * M_PI / 180.0f;
+            float gz69 = gyro69.gyro_z * M_PI / 180.0f;
+            
+            mahony_update_fast(&filter69, gx69, gy69, gz69, 
+                             acce69.acce_x, acce69.acce_y, acce69.acce_z, dt);
+            
+            // Sample at 10Hz
+            static uint32_t last_sample = 0;
+            if ((esp_timer_get_time() - last_sample) > 100000) {
+                float roll68, pitch68, yaw68;
+                quaternion_to_euler(filter68.q0, filter68.q1, filter68.q2, filter68.q3,
+                                  &roll68, &pitch68, &yaw68);
+                
+                float roll69, pitch69, yaw69;
+                quaternion_to_euler(filter69.q0, filter69.q1, filter69.q2, filter69.q3,
+                                  &roll69, &pitch69, &yaw69);
+                
+                yaw_sum68 += yaw68;
+                pitch_sum68 += pitch68;
+                roll_sum69 += roll69;
+                pitch_sum69 += pitch69;
+                samples++;
+                last_sample = esp_timer_get_time();
+            }
+        }
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    
+    if (samples > 0) {
+        float initial_yaw = yaw_sum68 / samples;
+        pitch_reference = pitch_sum68 / samples;
+        yaw_prev = initial_yaw;
+        yaw_total = 0;
+        pitch_current = pitch_reference;
+        calibrated68 = true;
+        
+        float initial_roll = roll_sum69 / samples;
+        pitch69_reference = pitch_sum69 / samples;
+        roll_current = initial_roll;
+        pitch69_current = pitch69_reference;
+        calibrated69 = true;
+        
+        ESP_LOGI(TAG, "Calibration complete!");
+        ESP_LOGI(TAG, "MPU68: Yaw=%.1f°, Pitch=%.1f°", initial_yaw, pitch_reference);
+        ESP_LOGI(TAG, "MPU69: Roll=%.1f°, Pitch=%.1f°", initial_roll, pitch69_reference);
+    }
+}
+
+void app_main(void) {
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "Starting Dual MPU6050 + Flex Sensors Controller (AP Mode)");
+    ESP_LOGI(TAG, "==================================================");
+    
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+    
+    i2c_master_init();
+    mpu6050_init();
+    
+    if (!mpu68 || !mpu69) {
+        ESP_LOGE(TAG, "MPU6050 initialization failed!");
+        return;
+    }
+    
+    flex_sensor_init();
+    
+    // Initialize WiFi in AP mode
+    wifi_init_ap();
+    
+    ESP_LOGI(TAG, "Waiting for AP to start...");
+    EventBits_t bits = xEventGroupWaitBits(ap_event_group, 
+                                          AP_STARTED_BIT, 
+                                          pdFALSE, pdTRUE, portMAX_DELAY);
+    
+    if (bits & AP_STARTED_BIT) {
+        ESP_LOGI(TAG, "AP started successfully");
+        ESP_LOGI(TAG, "Connect to WiFi: SSID: %s, Password: %s", AP_SSID, AP_PASSWORD);
+        ESP_LOGI(TAG, "ESP32 IP Address: 192.168.4.1");
+    }
+    
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    calibrate_sensors();
+    
+    xTaskCreate(main_task, "main_task", 8192, NULL, 5, NULL);
+    
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "System Ready! Command Mapping:");
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "MPU68 - Servo 0 (Yaw): L, l, H, r, R");
+    ESP_LOGI(TAG, "MPU68 - Servo 1 (Pitch): A, B, C, D");
+    ESP_LOGI(TAG, "Flex2 - Servo 2 (GPIO34): 5, 6, 7");
+    ESP_LOGI(TAG, "MPU69 - Servo 4 (Roll): X, Y, Z, W, V");
+    ESP_LOGI(TAG, "MPU69 - Servo 5 (Pitch): P, Q, U, T, S");
+    ESP_LOGI(TAG, "Flex1 - Servo 6 (GPIO35): 1, 2, 3, 4");
+    ESP_LOGI(TAG, "==================================================");
+}

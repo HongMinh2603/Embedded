@@ -1,0 +1,1074 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7116
+ho 0 tail 12 room 4
+load:0x40078000,len:15688
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3876
+entry 0x4008064c
+[0;32mI (33) boot: ESP-IDF v5.1.6-dirty 2nd stage bootloader[0m
+[0;32mI (33) boot: compile time Dec 30 2025 22:06:18[0m
+[0;32mI (33) boot: Multicore bootloader[0m
+[0;32mI (38) boot: chip revision: v3.1[0m
+[0;32mI (42) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (46) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (51) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (55) boot: Enabling RNG early entropy source...[0m
+[0;32mI (61) boot: Partition Table:[0m
+[0;32mI (64) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (72) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (79) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (86) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (94) boot: End of partition table[0m
+[0;32mI (98) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1c980h (117120) map[0m
+[0;32mI (149) esp_image: segment 1: paddr=0002c9a8 vaddr=3ffb0000 size=03670h ( 13936) load[0m
+[0;32mI (155) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=879b8h (555448) map[0m
+[0;32mI (355) esp_image: segment 3: paddr=000b79e0 vaddr=3ffb3670 size=00608h (  1544) load[0m
+[0;32mI (356) esp_image: segment 4: paddr=000b7ff0 vaddr=40080000 size=17a80h ( 96896) load[0m
+[0;32mI (413) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (413) boot: Disabling RNG early entropy source...[0m
+[0;32mI (425) cpu_start: Multicore app[0m
+[0;32mI (426) cpu_start: Pro cpu up.[0m
+[0;32mI (426) cpu_start: Starting app cpu, entry point is 0x400814c4[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (443) cpu_start: Pro cpu start user code[0m
+[0;32mI (443) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (443) cpu_start: Application information:[0m
+[0;32mI (448) cpu_start: Project name:     testarm[0m
+[0;32mI (453) cpu_start: App version:      1[0m
+[0;32mI (457) cpu_start: Compile time:     Dec 30 2025 22:06:10[0m
+[0;32mI (463) cpu_start: ELF file SHA256:  ea7facd4468dc4ac...[0m
+[0;32mI (469) cpu_start: ESP-IDF:          v5.1.6-dirty[0m
+[0;32mI (475) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (480) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (484) cpu_start: Chip rev:         v3.1[0m
+[0;32mI (489) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (496) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (502) heap_init: At 3FFB7DC0 len 00028240 (160 KiB): DRAM[0m
+[0;32mI (509) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (515) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (521) heap_init: At 40097A80 len 00008580 (33 KiB): IRAM[0m
+[0;32mI (529) spi_flash: detected chip: generic[0m
+[0;32mI (532) spi_flash: flash io: dio[0m
+[0;33mW (536) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (550) app_start: Starting scheduler on CPU0[0m
+[0;32mI (554) app_start: Starting scheduler on CPU1[0m
+[0;32mI (554) main_task: Started on CPU0[0m
+[0;32mI (564) main_task: Calling app_main()[0m
+[0;32mI (564) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (574) QUAD_SERVO_SERVER_STA: Starting Quad Servo Controller Server (STA Mode)...[0m
+[0;32mI (574) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (614) QUAD_SERVO_SERVER_STA: I2C initialized successfully[0m
+[0;32mI (624) QUAD_SERVO_SERVER_STA: Initializing PCA9685...[0m
+[0;32mI (634) QUAD_SERVO_SERVER_STA: Prescale value: 121[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: PCA9685 initialized[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: Turning off all PWM channels before setup...[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: All PWM channels turned off[0m
+[0;32mI (1144) QUAD_SERVO_SERVER_STA: Initializing WiFi in STA mode...[0m
+[0;32mI (1154) wifi:wifi driver task: 3ffc00bc, prio:23, stack:6656, core=0[0m
+[0;32mI (1164) wifi:wifi firmware version: 02461b5[0m
+[0;32mI (1164) wifi:wifi certification version: v7.0[0m
+[0;32mI (1164) wifi:config NVS flash: enabled[0m
+[0;32mI (1164) wifi:config nano formating: disabled[0m
+[0;32mI (1174) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (1174) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (1184) wifi:Init management short buffer num: 32[0m
+[0;32mI (1184) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (1194) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (1194) wifi:Init static rx buffer num: 10[0m
+[0;32mI (1194) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (1204) wifi_init: rx ba win: 6[0m
+[0;32mI (1204) wifi_init: tcpip mbox: 32[0m
+[0;32mI (1214) wifi_init: udp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp tx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp rx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp mss: 1440[0m
+[0;32mI (1234) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (1234) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (1244) phy_init: phy_version 4840,02e0d70,Sep  2 2024,19:39:07[0m
+[0;32mI (1324) phy_init: Saving new calibration data due to checksum failure or outdated calibration data, mode(0)[0m
+[0;32mI (1404) wifi:mode : sta (68:fe:71:80:76:38)[0m
+[0;32mI (1404) wifi:enable tsf[0m
+[0;32mI (1404) QUAD_SERVO_SERVER_STA: WiFi initialization complete[0m
+[0;32mI (1404) QUAD_SERVO_SERVER_STA: Connecting to AP: ESP32_HAND_CONTROLLER[0m
+[0;32mI (1404) QUAD_SERVO_SERVER_STA: WiFi station started[0m
+[0;32mI (1414) wifi:new:<1,1>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (1424) wifi:state: init -> auth (b0)[0m
+[0;32mI (1424) QUAD_SERVO_SERVER_STA: Waiting for WiFi connection...[0m
+[0;32mI (1434) wifi:state: auth -> assoc (0)[0m
+[0;32mI (1444) wifi:Association refused temporarily time 1500, comeback time 1600 (TUs)[0m
+[0;32mI (3084) wifi:state: assoc -> assoc (0)[0m
+[0;32mI (3094) wifi:state: assoc -> run (10)[0m
+[0;32mI (3104) wifi:connected with ESP32_HAND_CONTROLLER, aid = 1, channel 1, 40U, bssid = 20:e7:c8:69:00:11[0m
+[0;32mI (3104) wifi:security: WPA2-PSK, phy: bgn, rssi: -57[0m
+[0;32mI (3114) wifi:pm start, type: 1[0m
+
+[0;32mI (3114) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (3154) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (3464) wifi:<ba-add>idx:0 (ifx:0, 20:e7:c8:69:00:11), tid:0, ssn:0, winSize:64[0m
+[0;32mI (4124) esp_netif_handlers: sta ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1[0m
+[0;32mI (4124) QUAD_SERVO_SERVER_STA: Got IP: 192.168.4.2[0m
+[0;32mI (4124) QUAD_SERVO_SERVER_STA: WiFi connected successfully[0m
+[0;32mI (6134) QUAD_SERVO_SERVER_STA: Initializing all servos to default positions:[0m
+[0;32mI (6134) QUAD_SERVO_SERVER_STA: All PWM channels turned off[0m
+[0;32mI (6234) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (6254) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (6274) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (6294) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (6314) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA:   Servo 0 (Yaw): 90°[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA:   Servo 1 (Pitch): 180°[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA:   Servo 2 (Flex2): 60°[0m
+[0;32mI (6344) QUAD_SERVO_SERVER_STA:   Servo 4 (Roll): 0°[0m
+[0;32mI (6344) QUAD_SERVO_SERVER_STA:   Servo 5 (Pitch69): 90°[0m
+[0;32mI (6354) QUAD_SERVO_SERVER_STA:   Servo 6 (Flex1): 180°[0m
+[0;32mI (6364) QUAD_SERVO_SERVER_STA: Starting TCP server task[0m
+[0;32mI (6364) QUAD_SERVO_SERVER_STA: TCP server started on port 1234[0m
+[0;32mI (6374) QUAD_SERVO_SERVER_STA: Waiting for single character commands...[0m
+[0;32mI (6384) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6384) QUAD_SERVO_SERVER_STA: Command Reference:[0m
+[0;32mI (6394) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6404) QUAD_SERVO_SERVER_STA: MPU68 - Servo 0 (Yaw):[0m
+[0;32mI (6404) QUAD_SERVO_SERVER_STA:   'L' -> 10° (left >60°)[0m
+[0;32mI (6414) QUAD_SERVO_SERVER_STA:   'l' -> 50° (left >30°)[0m
+[0;32mI (6424) QUAD_SERVO_SERVER_STA:   'H' -> 90° (home)[0m
+[0;32mI (6424) QUAD_SERVO_SERVER_STA:   'r' -> 140° (right >30°)[0m
+[0;32mI (6434) QUAD_SERVO_SERVER_STA:   'R' -> 170° (right >60°)[0m
+[0;32mI (6434) QUAD_SERVO_SERVER_STA: MPU68 - Servo 1 (Pitch):[0m
+[0;32mI (6444) QUAD_SERVO_SERVER_STA:   'A' -> 180° (pitch -20° to 5°)[0m
+[0;32mI (6454) QUAD_SERVO_SERVER_STA:   'B' -> 150° (pitch 20.1° to 40°)[0m
+[0;32mI (6454) QUAD_SERVO_SERVER_STA:   'C' -> 120° (pitch 40.1° to 55°)[0m
+[0;32mI (6464) QUAD_SERVO_SERVER_STA:   'D' -> 90° (pitch 55.1° to 90°)[0m
+[0;32mI (6474) QUAD_SERVO_SERVER_STA: Flex2 - Servo 2 (GPIO34):[0m
+[0;32mI (6474) QUAD_SERVO_SERVER_STA:   '5' -> 60° (<1500)[0m
+[0;32mI (6484) QUAD_SERVO_SERVER_STA:   '6' -> 120° (1500-1600)[0m
+[0;32mI (6494) QUAD_SERVO_SERVER_STA:   '7' -> 180° (>1600)[0m
+[0;32mI (6494) QUAD_SERVO_SERVER_STA: MPU69 - Servo 4 (Roll):[0m
+[0;32mI (6504) QUAD_SERVO_SERVER_STA:   'X' -> 0° (Roll -160° to -180° và 160° to 180°)[0m
+[0;32mI (6514) QUAD_SERVO_SERVER_STA:   'Y' -> 45° (Roll 120° to 150°)[0m
+[0;32mI (6514) QUAD_SERVO_SERVER_STA:   'Z' -> 90° (Roll 61° to 119°)[0m
+[0;32mI (6524) QUAD_SERVO_SERVER_STA:   'W' -> 135° (Roll 21° to 60°)[0m
+[0;32mI (6534) QUAD_SERVO_SERVER_STA:   'V' -> 180° (Roll 0° to 20°)[0m
+[0;32mI (6534) QUAD_SERVO_SERVER_STA: MPU69 - Servo 5 (Pitch):[0m
+[0;32mI (6544) QUAD_SERVO_SERVER_STA:   'P' -> 180° (chênh > +40° so với ban đầu)[0m
+[0;32mI (6554) QUAD_SERVO_SERVER_STA:   'Q' -> 135° (chênh > +20° so với ban đầu)[0m
+[0;32mI (6564) QUAD_SERVO_SERVER_STA:   'U' -> 90° (trong khoảng ±20°)[0m
+[0;32mI (6564) QUAD_SERVO_SERVER_STA:   'T' -> 45° (chênh < -20° so với ban đầu)[0m
+[0;32mI (6574) QUAD_SERVO_SERVER_STA:   'S' -> 0° (chênh < -40° so với ban đầu)[0m
+[0;32mI (6584) QUAD_SERVO_SERVER_STA: Flex1 - Servo 6 (GPIO35):[0m
+[0;32mI (6594) QUAD_SERVO_SERVER_STA:   '1' -> 180° (<100)[0m
+[0;32mI (6594) QUAD_SERVO_SERVER_STA:   '2' -> 150° (100-400)[0m
+[0;32mI (6604) QUAD_SERVO_SERVER_STA:   '3' -> 120° (400-800)[0m
+[0;32mI (6604) QUAD_SERVO_SERVER_STA:   '4' -> 90° (>800)[0m
+[0;32mI (6614) QUAD_SERVO_SERVER_STA: Status: '?' -> Get all servo angles[0m
+[0;32mI (6624) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6624) QUAD_SERVO_SERVER_STA: Quad Servo Controller READY![0m
+[0;32mI (6634) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6644) main_task: Returned from app_main()[0m
+[0;32mI (21954) wifi:bcn_timeout,ap_probe_send_start[0m
+[0;32mI (24454) wifi:ap_probe_send over, reset wifi status to disassoc[0m
+[0;32mI (24454) wifi:state: run -> init (c800)[0m
+[0;32mI (24474) wifi:pm stop, total sleep time: 11689001 us / 21356245 us[0m
+
+[0;32mI (24474) wifi:<ba-del>idx:0, tid:0[0m
+[0;32mI (24474) wifi:new:<1,0>, old:<1,1>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (24484) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (27394) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (30304) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (33214) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (33724) wifi:new:<1,1>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (33724) wifi:state: init -> auth (b0)[0m
+[0;32mI (33734) wifi:state: auth -> assoc (0)[0m
+[0;32mI (33744) wifi:state: assoc -> run (10)[0m
+[0;32mI (33764) wifi:connected with ESP32_HAND_CONTROLLER, aid = 1, channel 1, 40U, bssid = 20:e7:c8:69:00:11[0m
+[0;32mI (33764) wifi:security: WPA2-PSK, phy: bgn, rssi: -43[0m
+[0;32mI (33764) wifi:pm start, type: 1[0m
+
+[0;32mI (33814) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (34764) esp_netif_handlers: sta ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1[0m
+[0;32mI (34764) QUAD_SERVO_SERVER_STA: Got IP: 192.168.4.2[0m
+[0;32mI (61014) wifi:bcn_timeout,ap_probe_send_start[0m
+[0;32mI (63514) wifi:ap_probe_send over, reset wifi status to disassoc[0m
+[0;32mI (63514) wifi:state: run -> init (c800)[0m
+[0;32mI (63524) wifi:pm stop, total sleep time: 19604288 us / 29755208 us[0m
+
+[0;32mI (63524) wifi:new:<1,0>, old:<1,1>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (63524) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (66444) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (69354) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (72264) QUAD_SERVO_SERVER_STA: WiFi disconnected, trying to reconnect...[0m
+[0;32mI (72764) wifi:new:<1,1>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (72774) wifi:state: init -> auth (b0)[0m
+[0;32mI (72784) wifi:state: auth -> assoc (0)[0m
+[0;32mI (72794) wifi:state: assoc -> run (10)[0m
+[0;32mI (72814) wifi:connected with ESP32_HAND_CONTROLLER, aid = 1, channel 1, 40U, bssid = 20:e7:c8:69:00:11[0m
+[0;32mI (72814) wifi:security: WPA2-PSK, phy: bgn, rssi: -53[0m
+[0;32mI (72814) wifi:pm start, type: 1[0m
+
+[0;32mI (72904) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (73824) esp_netif_handlers: sta ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1[0m
+[0;32mI (73824) QUAD_SERVO_SERVER_STA: Got IP: 192.168.4.2[0m
+[0;32mI (77734) wifi:<ba-add>idx:0 (ifx:0, 20:e7:c8:69:00:11), tid:0, ssn:0, winSize:64[0m
+[0;32mI (77744) QUAD_SERVO_SERVER_STA: Client connected from 192.168.4.1[0m
+[0;32mI (77754) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (77754) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (77984) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (77984) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (77984) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (77994) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (77994) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (78004) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (78004) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (78014) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (78014) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (78024) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (78244) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (78244) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (79874) QUAD_SERVO_SERVER_STA: Received char: '7'[0m
+[0;32mI (79874) QUAD_SERVO_SERVER_STA: Servo 2 -> 180°[0m
+[0;32mI (80804) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (80804) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (80994) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (80994) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (82234) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (82234) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (82274) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (82274) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (82844) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (82844) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (83004) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (83004) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (83244) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (83244) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (83244) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (83244) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (83494) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (83494) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (83974) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (83974) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (84074) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (84074) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (84994) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (84994) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (86974) QUAD_SERVO_SERVER_STA: Received char: '2'[0m
+[0;32mI (86984) QUAD_SERVO_SERVER_STA: Servo 6 -> 150°[0m
+[0;32mI (87154) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (87154) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (87454) QUAD_SERVO_SERVER_STA: Received char: '4'[0m
+[0;32mI (87454) QUAD_SERVO_SERVER_STA: Servo 6 -> 90°[0m
+[0;32mI (87864) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (87864) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (88474) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (88474) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (88514) QUAD_SERVO_SERVER_STA: Received char: '2'[0m
+[0;32mI (88514) QUAD_SERVO_SERVER_STA: Servo 6 -> 150°[0m
+[0;32mI (88734) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (88734) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (89704) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (89704) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (89754) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (89754) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (89994) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (89994) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (90234) QUAD_SERVO_SERVER_STA: Received char: 'V'[0m
+[0;32mI (90234) QUAD_SERVO_SERVER_STA: Servo 4 -> 180°[0m
+[0;32mI (91034) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (91034) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (91244) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (91244) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (91244) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (91244) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (91484) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (91484) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (92364) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (92364) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (92484) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (92484) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (92734) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (92734) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (92984) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (92984) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (92984) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (92994) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (92994) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (93004) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (93004) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (93014) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (94104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (94114) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (94244) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (94244) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (94494) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (94494) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (94494) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (94494) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (95034) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (95044) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (95234) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (95244) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (95244) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (95244) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (95254) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (95254) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (95484) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (95484) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (95484) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (95494) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (96874) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (96874) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (97024) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (97024) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (97694) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (97694) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (97734) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (97734) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (97984) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (97984) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (99644) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (99644) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (99734) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (99734) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (99734) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (99744) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (99984) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (99984) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (100234) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (100234) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7116
+ho 0 tail 12 room 4
+load:0x40078000,len:15688
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3876
+entry 0x4008064c
+[0;32mI (33) boot: ESP-IDF v5.1.6-dirty 2nd stage bootloader[0m
+[0;32mI (33) boot: compile time Dec 30 2025 22:06:18[0m
+[0;32mI (33) boot: Multicore bootloader[0m
+[0;32mI (38) boot: chip revision: v3.1[0m
+[0;32mI (42) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (46) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (51) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (55) boot: Enabling RNG early entropy source...[0m
+[0;32mI (61) boot: Partition Table:[0m
+[0;32mI (64) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (72) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (79) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (86) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (94) boot: End of partition table[0m
+[0;32mI (98) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1c980h (117120) map[0m
+[0;32mI (149) esp_image: segment 1: paddr=0002c9a8 vaddr=3ffb0000 size=03670h ( 13936) load[0m
+[0;32mI (155) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=879b8h (555448) map[0m
+[0;32mI (355) esp_image: segment 3: paddr=000b79e0 vaddr=3ffb3670 size=00608h (  1544) load[0m
+[0;32mI (356) esp_image: segment 4: paddr=000b7ff0 vaddr=40080000 size=17a80h ( 96896) load[0m
+[0;32mI (413) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (413) boot: Disabling RNG early entropy source...[0m
+[0;32mI (425) cpu_start: Multicore app[0m
+[0;32mI (426) cpu_start: Pro cpu up.[0m
+[0;32mI (426) cpu_start: Starting app cpu, entry point is 0x400814c4[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (443) cpu_start: Pro cpu start user code[0m
+[0;32mI (443) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (443) cpu_start: Application information:[0m
+[0;32mI (448) cpu_start: Project name:     testarm[0m
+[0;32mI (453) cpu_start: App version:      1[0m
+[0;32mI (457) cpu_start: Compile time:     Dec 30 2025 22:06:10[0m
+[0;32mI (463) cpu_start: ELF file SHA256:  ea7facd4468dc4ac...[0m
+[0;32mI (469) cpu_start: ESP-IDF:          v5.1.6-dirty[0m
+[0;32mI (475) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (480) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (484) cpu_start: Chip rev:         v3.1[0m
+[0;32mI (489) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (496) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (502) heap_init: At 3FFB7DC0 len 00028240 (160 KiB): DRAM[0m
+[0;32mI (509) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (515) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (521) heap_init: At 40097A80 len 00008580 (33 KiB): IRAM[0m
+[0;32mI (529) spi_flash: detected chip: generic[0m
+[0;32mI (532) spi_flash: flash io: dio[0m
+[0;33mW (536) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (550) app_start: Starting scheduler on CPU0[0m
+[0;32mI (554) app_start: Starting scheduler on CPU1[0m
+[0;32mI (554) main_task: Started on CPU0[0m
+[0;32mI (564) main_task: Calling app_main()[0m
+[0;32mI (564) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (574) QUAD_SERVO_SERVER_STA: Starting Quad Servo Controller Server (STA Mode)...[0m
+[0;32mI (574) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (614) QUAD_SERVO_SERVER_STA: I2C initialized successfully[0m
+[0;32mI (624) QUAD_SERVO_SERVER_STA: Initializing PCA9685...[0m
+[0;32mI (634) QUAD_SERVO_SERVER_STA: Prescale value: 121[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: PCA9685 initialized[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: Turning off all PWM channels before setup...[0m
+[0;32mI (644) QUAD_SERVO_SERVER_STA: All PWM channels turned off[0m
+[0;32mI (1144) QUAD_SERVO_SERVER_STA: Initializing WiFi in STA mode...[0m
+[0;32mI (1154) wifi:wifi driver task: 3ffc00bc, prio:23, stack:6656, core=0[0m
+[0;32mI (1164) wifi:wifi firmware version: 02461b5[0m
+[0;32mI (1164) wifi:wifi certification version: v7.0[0m
+[0;32mI (1164) wifi:config NVS flash: enabled[0m
+[0;32mI (1164) wifi:config nano formating: disabled[0m
+[0;32mI (1174) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (1174) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (1184) wifi:Init management short buffer num: 32[0m
+[0;32mI (1184) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (1194) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (1194) wifi:Init static rx buffer num: 10[0m
+[0;32mI (1194) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (1204) wifi_init: rx ba win: 6[0m
+[0;32mI (1204) wifi_init: tcpip mbox: 32[0m
+[0;32mI (1214) wifi_init: udp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp tx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp rx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp mss: 1440[0m
+[0;32mI (1234) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (1234) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (1244) phy_init: phy_version 4840,02e0d70,Sep  2 2024,19:39:07[0m
+[0;32mI (1324) phy_init: Saving new calibration data due to checksum failure or outdated calibration data, mode(0)[0m
+[0;32mI (1354) wifi:mode : sta (68:fe:71:80:76:38)[0m
+[0;32mI (1354) wifi:enable tsf[0m
+[0;32mI (1364) QUAD_SERVO_SERVER_STA: WiFi initialization complete[0m
+[0;32mI (1364) QUAD_SERVO_SERVER_STA: Connecting to AP: ESP32_HAND_CONTROLLER[0m
+[0;32mI (1364) QUAD_SERVO_SERVER_STA: WiFi station started[0m
+[0;32mI (1374) wifi:new:<1,1>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (1374) wifi:state: init -> auth (b0)[0m
+[0;32mI (1384) QUAD_SERVO_SERVER_STA: Waiting for WiFi connection...[0m
+[0;32mI (1384) wifi:state: auth -> assoc (0)[0m
+[0;32mI (1394) wifi:Association refused temporarily time 1500, comeback time 1600 (TUs)[0m
+[0;32mI (3034) wifi:state: assoc -> assoc (0)[0m
+[0;32mI (3044) wifi:state: assoc -> run (10)[0m
+[0;32mI (3064) wifi:connected with ESP32_HAND_CONTROLLER, aid = 1, channel 1, 40U, bssid = 20:e7:c8:69:00:11[0m
+[0;32mI (3064) wifi:security: WPA2-PSK, phy: bgn, rssi: -56[0m
+[0;32mI (3064) wifi:pm start, type: 1[0m
+
+[0;32mI (3064) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (3094) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (4074) esp_netif_handlers: sta ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1[0m
+[0;32mI (4074) QUAD_SERVO_SERVER_STA: Got IP: 192.168.4.2[0m
+[0;32mI (4074) QUAD_SERVO_SERVER_STA: WiFi connected successfully[0m
+[0;32mI (6084) QUAD_SERVO_SERVER_STA: Initializing all servos to default positions:[0m
+[0;32mI (6084) QUAD_SERVO_SERVER_STA: All PWM channels turned off[0m
+[0;32mI (6184) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (6204) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (6224) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (6244) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (6264) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (6284) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (6284) QUAD_SERVO_SERVER_STA:   Servo 0 (Yaw): 90°[0m
+[0;32mI (6284) QUAD_SERVO_SERVER_STA:   Servo 1 (Pitch): 180°[0m
+[0;32mI (6284) QUAD_SERVO_SERVER_STA:   Servo 2 (Flex2): 60°[0m
+[0;32mI (6294) QUAD_SERVO_SERVER_STA:   Servo 4 (Roll): 0°[0m
+[0;32mI (6294) QUAD_SERVO_SERVER_STA:   Servo 5 (Pitch69): 90°[0m
+[0;32mI (6304) QUAD_SERVO_SERVER_STA:   Servo 6 (Flex1): 180°[0m
+[0;32mI (6314) QUAD_SERVO_SERVER_STA: Starting TCP server task[0m
+[0;32mI (6314) QUAD_SERVO_SERVER_STA: TCP server started on port 1234[0m
+[0;32mI (6324) QUAD_SERVO_SERVER_STA: Waiting for single character commands...[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6334) QUAD_SERVO_SERVER_STA: Command Reference:[0m
+[0;32mI (6344) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6354) QUAD_SERVO_SERVER_STA: MPU68 - Servo 0 (Yaw):[0m
+[0;32mI (6354) QUAD_SERVO_SERVER_STA:   'L' -> 10° (left >60°)[0m
+[0;32mI (6364) QUAD_SERVO_SERVER_STA:   'l' -> 50° (left >30°)[0m
+[0;32mI (6374) QUAD_SERVO_SERVER_STA:   'H' -> 90° (home)[0m
+[0;32mI (6374) QUAD_SERVO_SERVER_STA:   'r' -> 140° (right >30°)[0m
+[0;32mI (6384) QUAD_SERVO_SERVER_STA:   'R' -> 170° (right >60°)[0m
+[0;32mI (6384) QUAD_SERVO_SERVER_STA: MPU68 - Servo 1 (Pitch):[0m
+[0;32mI (6394) QUAD_SERVO_SERVER_STA:   'A' -> 180° (pitch -20° to 5°)[0m
+[0;32mI (6404) QUAD_SERVO_SERVER_STA:   'B' -> 150° (pitch 20.1° to 40°)[0m
+[0;32mI (6404) QUAD_SERVO_SERVER_STA:   'C' -> 120° (pitch 40.1° to 55°)[0m
+[0;32mI (6414) QUAD_SERVO_SERVER_STA:   'D' -> 90° (pitch 55.1° to 90°)[0m
+[0;32mI (6424) QUAD_SERVO_SERVER_STA: Flex2 - Servo 2 (GPIO34):[0m
+[0;32mI (6424) QUAD_SERVO_SERVER_STA:   '5' -> 60° (<1500)[0m
+[0;32mI (6434) QUAD_SERVO_SERVER_STA:   '6' -> 120° (1500-1600)[0m
+[0;32mI (6444) QUAD_SERVO_SERVER_STA:   '7' -> 180° (>1600)[0m
+[0;32mI (6444) QUAD_SERVO_SERVER_STA: MPU69 - Servo 4 (Roll):[0m
+[0;32mI (6454) QUAD_SERVO_SERVER_STA:   'X' -> 0° (Roll -160° to -180° và 160° to 180°)[0m
+[0;32mI (6464) QUAD_SERVO_SERVER_STA:   'Y' -> 45° (Roll 120° to 150°)[0m
+[0;32mI (6464) QUAD_SERVO_SERVER_STA:   'Z' -> 90° (Roll 61° to 119°)[0m
+[0;32mI (6474) QUAD_SERVO_SERVER_STA:   'W' -> 135° (Roll 21° to 60°)[0m
+[0;32mI (6484) QUAD_SERVO_SERVER_STA:   'V' -> 180° (Roll 0° to 20°)[0m
+[0;32mI (6484) QUAD_SERVO_SERVER_STA: MPU69 - Servo 5 (Pitch):[0m
+[0;32mI (6494) QUAD_SERVO_SERVER_STA:   'P' -> 180° (chênh > +40° so với ban đầu)[0m
+[0;32mI (6504) QUAD_SERVO_SERVER_STA:   'Q' -> 135° (chênh > +20° so với ban đầu)[0m
+[0;32mI (6514) QUAD_SERVO_SERVER_STA:   'U' -> 90° (trong khoảng ±20°)[0m
+[0;32mI (6514) QUAD_SERVO_SERVER_STA:   'T' -> 45° (chênh < -20° so với ban đầu)[0m
+[0;32mI (6524) QUAD_SERVO_SERVER_STA:   'S' -> 0° (chênh < -40° so với ban đầu)[0m
+[0;32mI (6534) QUAD_SERVO_SERVER_STA: Flex1 - Servo 6 (GPIO35):[0m
+[0;32mI (6544) QUAD_SERVO_SERVER_STA:   '1' -> 180° (<100)[0m
+[0;32mI (6544) QUAD_SERVO_SERVER_STA:   '2' -> 150° (100-400)[0m
+[0;32mI (6554) QUAD_SERVO_SERVER_STA:   '3' -> 120° (400-800)[0m
+[0;32mI (6554) QUAD_SERVO_SERVER_STA:   '4' -> 90° (>800)[0m
+[0;32mI (6564) QUAD_SERVO_SERVER_STA: Status: '?' -> Get all servo angles[0m
+[0;32mI (6574) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6574) QUAD_SERVO_SERVER_STA: Quad Servo Controller READY![0m
+[0;32mI (6584) QUAD_SERVO_SERVER_STA: ==================================================[0m
+[0;32mI (6594) main_task: Returned from app_main()[0m
+[0;32mI (7144) wifi:<ba-add>idx:0 (ifx:0, 20:e7:c8:69:00:11), tid:0, ssn:0, winSize:64[0m
+[0;32mI (10364) QUAD_SERVO_SERVER_STA: Client connected from 192.168.4.1[0m
+[0;32mI (10374) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (10374) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (10604) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (10604) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (10614) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (10614) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (10614) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (10624) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (10634) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (10634) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (10644) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (10644) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (10654) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (10654) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (11994) QUAD_SERVO_SERVER_STA: Received char: 'R'[0m
+[0;32mI (11994) QUAD_SERVO_SERVER_STA: Servo 0 -> 170°[0m
+[0;32mI (12814) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (12814) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (13024) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (13024) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (15474) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (15484) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (16094) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (16094) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (16504) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (16504) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (16604) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (16604) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (17114) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (17114) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (17354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (17354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (17354) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (17364) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (17364) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (17374) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (18344) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (18344) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (18354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (18354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (18614) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (18614) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (18614) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (18624) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (18854) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (18854) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (19114) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (19114) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (19114) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (19114) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (19124) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (19124) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (20084) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (20094) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (20394) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (20394) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (20604) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (20604) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (23464) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (23464) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (23874) QUAD_SERVO_SERVER_STA: Received char: 'R'[0m
+[0;32mI (23874) QUAD_SERVO_SERVER_STA: Servo 0 -> 170°[0m
+[0;32mI (25514) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (25514) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (26234) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (26234) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (27664) QUAD_SERVO_SERVER_STA: Received char: 'R'[0m
+[0;32mI (27664) QUAD_SERVO_SERVER_STA: Servo 0 -> 170°[0m
+[0;32mI (27854) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (27864) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (29404) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (29404) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (29604) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (29614) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (29854) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (29854) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (30104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (30104) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (30104) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (30114) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (30354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (30364) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (30614) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (30614) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (30614) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (30614) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (31454) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (31454) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (32374) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (32374) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (34114) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (34114) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (34354) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (34354) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (34734) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (34734) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (35134) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (35144) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (35354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (35354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (35614) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (35614) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (36984) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (36984) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (37284) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (37294) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (40564) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (40564) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (45584) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (45584) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (48054) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (48054) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (50604) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (50604) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (53984) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (53984) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (55314) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (55314) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (55354) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (55354) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (55604) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (55604) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (55604) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (55614) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (57154) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (57154) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (57354) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (57354) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (57354) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (57364) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (57364) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (57374) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (57604) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (57604) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (59814) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (59814) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (59854) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (59854) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (59854) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (59854) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (60104) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (60104) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (60364) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (60364) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (60614) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (60614) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (60854) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (60854) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (61364) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (61364) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (61604) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (61604) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (62584) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (62584) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (62614) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (62614) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (64014) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (64014) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (64224) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (64224) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (64354) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (64364) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (64834) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (64844) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (65654) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (65654) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (65854) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (65854) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (65854) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (65864) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (66884) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (66884) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (67394) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (67394) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (70674) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (70674) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (71284) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (71284) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (74054) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (74054) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (75794) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (75794) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (75854) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (75854) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (75854) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (75864) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (80804) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (80814) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (85824) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (85824) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (90844) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (90844) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (94734) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (94734) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (94854) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (94854) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (95554) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (95554) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (95604) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (95604) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (95604) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (95614) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (95854) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (95854) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (95854) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (95864) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (96474) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (96474) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (96614) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (96614) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (97394) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (97394) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (97604) QUAD_SERVO_SERVER_STA: Received char: '4'[0m
+[0;32mI (97604) QUAD_SERVO_SERVER_STA: Servo 6 -> 90°[0m
+[0;32mI (98314) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (98324) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (98354) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (98354) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (99344) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (99344) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (99444) QUAD_SERVO_SERVER_STA: Received char: '7'[0m
+[0;32mI (99444) QUAD_SERVO_SERVER_STA: Servo 2 -> 180°[0m
+[0;32mI (100584) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (100584) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (100624) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (100624) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (100864) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (100864) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (101814) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (101814) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (102224) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (102224) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (103034) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (103034) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (103234) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (103234) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (103844) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (103844) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (104054) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (104054) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (104364) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (104364) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (104874) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (104874) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (105104) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (105104) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (105104) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (105114) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (105354) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (105354) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (105354) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (105364) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (105794) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (105794) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (105854) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (105854) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (106104) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (106104) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (106104) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (106114) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (106814) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (106814) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (106854) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (106854) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (107104) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (107104) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (107634) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (107644) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (107854) QUAD_SERVO_SERVER_STA: Received char: '7'[0m
+[0;32mI (107854) QUAD_SERVO_SERVER_STA: Servo 2 -> 180°[0m
+[0;32mI (108664) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (108674) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (108884) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (108884) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (108884) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (108894) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (109114) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (109124) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (109794) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (109804) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (109994) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (109994) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (110104) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (110104) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (110914) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (110914) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (111104) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (111104) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (111104) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (111114) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (111114) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (111124) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (112044) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (112044) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (112144) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (112144) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (112354) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (112354) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (113164) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (113164) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (113364) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (113364) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (113364) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (113374) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (113604) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (113604) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (113604) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (113614) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (114294) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (114294) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (114354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (114354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (114604) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (114604) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (114604) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (114614) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (114614) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (114624) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (115114) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (115124) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (115354) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (115354) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (115354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (115364) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (115604) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (115614) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (115614) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (115614) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (115864) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (115864) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (116104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (116104) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (116354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (116354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (116954) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (116954) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (117104) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (117104) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (117354) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (117354) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (117354) QUAD_SERVO_SERVER_STA: Received char: 'V'[0m
+[0;32mI (117364) QUAD_SERVO_SERVER_STA: Servo 4 -> 180°[0m
+[0;32mI (117984) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (117984) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (118104) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (118104) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (118354) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (118364) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (118364) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (118364) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (119414) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (119414) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (120024) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (120024) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (120114) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (120114) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (120354) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (120354) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (120954) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (120954) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (121104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (121104) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (121104) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (121114) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (121114) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (121124) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (121124) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (121134) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (121354) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (121354) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (121604) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (121604) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (121604) QUAD_SERVO_SERVER_STA: Received char: 'P'[0m
+[0;32mI (121614) QUAD_SERVO_SERVER_STA: Servo 5 -> 180°[0m
+[0;32mI (121864) QUAD_SERVO_SERVER_STA: Received char: 'Q'[0m
+[0;32mI (121864) QUAD_SERVO_SERVER_STA: Servo 5 -> 135°[0m
+[0;32mI (122114) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (122114) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (122114) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (122114) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (122364) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (122364) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (122364) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (122364) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (123504) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (123514) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (123714) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (123714) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (124124) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (124124) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (124354) QUAD_SERVO_SERVER_STA: Received char: '4'[0m
+[0;32mI (124354) QUAD_SERVO_SERVER_STA: Servo 6 -> 90°[0m
+[0;32mI (124604) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (124604) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (124854) QUAD_SERVO_SERVER_STA: Received char: '2'[0m
+[0;32mI (124854) QUAD_SERVO_SERVER_STA: Servo 6 -> 150°[0m
+[0;32mI (124854) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (124864) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (125104) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (125104) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (125104) QUAD_SERVO_SERVER_STA: Received char: '7'[0m
+[0;32mI (125114) QUAD_SERVO_SERVER_STA: Servo 2 -> 180°[0m
+[0;32mI (125964) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (125964) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (127194) QUAD_SERVO_SERVER_STA: Received char: '2'[0m
+[0;32mI (127194) QUAD_SERVO_SERVER_STA: Servo 6 -> 150°[0m
+[0;32mI (127354) QUAD_SERVO_SERVER_STA: Received char: '4'[0m
+[0;32mI (127354) QUAD_SERVO_SERVER_STA: Servo 6 -> 90°[0m
+[0;32mI (128524) QUAD_SERVO_SERVER_STA: Received char: '3'[0m
+[0;32mI (128524) QUAD_SERVO_SERVER_STA: Servo 6 -> 120°[0m
+[0;32mI (128604) QUAD_SERVO_SERVER_STA: Received char: '2'[0m
+[0;32mI (128604) QUAD_SERVO_SERVER_STA: Servo 6 -> 150°[0m
+[0;32mI (128604) QUAD_SERVO_SERVER_STA: Received char: '1'[0m
+[0;32mI (128614) QUAD_SERVO_SERVER_STA: Servo 6 -> 180°[0m
+[0;32mI (129964) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (129964) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (130104) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (130104) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (130104) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (130114) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (130354) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (130354) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (130354) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (130364) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (130364) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (130374) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (130374) QUAD_SERVO_SERVER_STA: Received char: 'V'[0m
+[0;32mI (130384) QUAD_SERVO_SERVER_STA: Servo 4 -> 180°[0m
+[0;32mI (130674) QUAD_SERVO_SERVER_STA: Received char: '7'[0m
+[0;32mI (130674) QUAD_SERVO_SERVER_STA: Servo 2 -> 180°[0m
+[0;32mI (130984) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (130984) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (132314) QUAD_SERVO_SERVER_STA: Received char: 'W'[0m
+[0;32mI (132314) QUAD_SERVO_SERVER_STA: Servo 4 -> 135°[0m
+[0;32mI (132354) QUAD_SERVO_SERVER_STA: Received char: '6'[0m
+[0;32mI (132354) QUAD_SERVO_SERVER_STA: Servo 2 -> 120°[0m
+[0;32mI (132354) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (132364) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (132604) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (132604) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (132604) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (132614) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (133544) QUAD_SERVO_SERVER_STA: Received char: '5'[0m
+[0;32mI (133544) QUAD_SERVO_SERVER_STA: Servo 2 -> 60°[0m
+[0;32mI (136004) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (136004) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (139584) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (139584) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (140204) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (140204) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (140354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (140354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (140604) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (140604) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (140604) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (140614) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (140854) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (140854) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (140854) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (140864) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (140864) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (140874) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (141104) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (141104) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (141104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (141114) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (141534) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (141534) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (141834) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (141844) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (142044) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (142044) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (143684) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (143684) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (144504) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (144504) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (144614) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (144614) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (145014) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (145014) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (145214) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (145214) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (145354) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (145354) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (145604) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (145604) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (145854) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (145854) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (145854) QUAD_SERVO_SERVER_STA: Received char: 'U'[0m
+[0;32mI (145864) QUAD_SERVO_SERVER_STA: Servo 5 -> 90°[0m
+[0;32mI (145864) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (145874) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (146104) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (146104) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (146104) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (146114) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (146354) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (146354) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (146364) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (146364) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (146374) QUAD_SERVO_SERVER_STA: Received char: 'X'[0m
+[0;32mI (146374) QUAD_SERVO_SERVER_STA: Servo 4 -> 0°[0m
+[0;32mI (146384) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (146384) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (146394) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (146394) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (146604) QUAD_SERVO_SERVER_STA: Received char: 'T'[0m
+[0;32mI (146604) QUAD_SERVO_SERVER_STA: Servo 5 -> 45°[0m
+[0;32mI (146854) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (146854) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (146854) QUAD_SERVO_SERVER_STA: Received char: 'S'[0m
+[0;32mI (146864) QUAD_SERVO_SERVER_STA: Servo 5 -> 0°[0m
+[0;32mI (147104) QUAD_SERVO_SERVER_STA: Received char: 'Z'[0m
+[0;32mI (147104) QUAD_SERVO_SERVER_STA: Servo 4 -> 90°[0m
+[0;32mI (147104) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (147114) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (147114) QUAD_SERVO_SERVER_STA: Received char: 'Y'[0m
+[0;32mI (147124) QUAD_SERVO_SERVER_STA: Servo 4 -> 45°[0m
+[0;32mI (148084) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (148084) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (148184) QUAD_SERVO_SERVER_STA: Received char: 'B'[0m
+[0;32mI (148194) QUAD_SERVO_SERVER_STA: Servo 1 -> 150°[0m
+[0;32mI (148354) QUAD_SERVO_SERVER_STA: Received char: 'A'[0m
+[0;32mI (148354) QUAD_SERVO_SERVER_STA: Servo 1 -> 180°[0m
+[0;32mI (151054) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (151054) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (156074) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (156074) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (161194) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (161194) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (166214) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (166214) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (171224) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (171224) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (176244) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (176244) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (181264) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (181264) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (186384) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (186384) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (191394) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (191404) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (196414) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (196424) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (201434) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (201434) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (206554) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (206554) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (211574) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (211574) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (212084) QUAD_SERVO_SERVER_STA: Received char: 'r'[0m
+[0;32mI (212084) QUAD_SERVO_SERVER_STA: Servo 0 -> 140°[0m
+[0;32mI (216594) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (216594) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m
+[0;32mI (221604) QUAD_SERVO_SERVER_STA: Received char: 'H'[0m
+[0;32mI (221604) QUAD_SERVO_SERVER_STA: Servo 0 -> 90°[0m

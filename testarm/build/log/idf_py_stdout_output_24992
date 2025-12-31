@@ -1,0 +1,683 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7116
+ho 0 tail 12 room 4
+load:0x40078000,len:15688
+ho 0 tail 12 room 4
+load:0x40080400,len:4
+load:0x40080404,len:3876
+entry 0x4008064c
+[0;32mI (33) boot: ESP-IDF v5.1.6-dirty 2nd stage bootloader[0m
+[0;32mI (33) boot: compile time Dec 30 2025 22:06:18[0m
+[0;32mI (33) boot: Multicore bootloader[0m
+[0;32mI (38) boot: chip revision: v3.1[0m
+[0;32mI (42) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (46) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (51) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (55) boot: Enabling RNG early entropy source...[0m
+[0;32mI (61) boot: Partition Table:[0m
+[0;32mI (64) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (72) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (79) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (86) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (94) boot: End of partition table[0m
+[0;32mI (98) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1c490h (115856) map[0m
+[0;32mI (148) esp_image: segment 1: paddr=0002c4b8 vaddr=3ffb0000 size=03b60h ( 15200) load[0m
+[0;32mI (155) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=879f0h (555504) map[0m
+[0;32mI (356) esp_image: segment 3: paddr=000b7a18 vaddr=3ffb3b60 size=00118h (   280) load[0m
+[0;32mI (356) esp_image: segment 4: paddr=000b7b38 vaddr=40080000 size=17a80h ( 96896) load[0m
+[0;32mI (413) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (414) boot: Disabling RNG early entropy source...[0m
+[0;32mI (425) cpu_start: Multicore app[0m
+[0;32mI (426) cpu_start: Pro cpu up.[0m
+[0;32mI (426) cpu_start: Starting app cpu, entry point is 0x400814c4[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (443) cpu_start: Pro cpu start user code[0m
+[0;32mI (443) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (443) cpu_start: Application information:[0m
+[0;32mI (448) cpu_start: Project name:     testarm[0m
+[0;32mI (453) cpu_start: App version:      1[0m
+[0;32mI (457) cpu_start: Compile time:     Dec 30 2025 22:06:10[0m
+[0;32mI (464) cpu_start: ELF file SHA256:  4bbe85d393974fb2...[0m
+[0;32mI (470) cpu_start: ESP-IDF:          v5.1.6-dirty[0m
+[0;32mI (475) cpu_start: Min chip rev:     v0.0[0m
+[0;32mI (480) cpu_start: Max chip rev:     v3.99 [0m
+[0;32mI (484) cpu_start: Chip rev:         v3.1[0m
+[0;32mI (489) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (497) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (502) heap_init: At 3FFB7DC8 len 00028238 (160 KiB): DRAM[0m
+[0;32mI (509) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (515) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (521) heap_init: At 40097A80 len 00008580 (33 KiB): IRAM[0m
+[0;32mI (529) spi_flash: detected chip: generic[0m
+[0;32mI (532) spi_flash: flash io: dio[0m
+[0;33mW (536) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (550) app_start: Starting scheduler on CPU0[0m
+[0;32mI (554) app_start: Starting scheduler on CPU1[0m
+[0;32mI (554) main_task: Started on CPU0[0m
+[0;32mI (564) main_task: Calling app_main()[0m
+[0;32mI (564) ROBOT_ARM_SERVER: ==================================================[0m
+[0;32mI (574) ROBOT_ARM_SERVER: Robot Arm Server with 3D Web Interface[0m
+[0;32mI (574) ROBOT_ARM_SERVER: ==================================================[0m
+[0;32mI (614) ROBOT_ARM_SERVER: I2C initialized successfully[0m
+[0;32mI (614) ROBOT_ARM_SERVER: Initializing PCA9685...[0m
+[0;32mI (624) ROBOT_ARM_SERVER: Prescale value: 121[0m
+[0;32mI (634) ROBOT_ARM_SERVER: PCA9685 initialized[0m
+[0;32mI (634) ROBOT_ARM_SERVER: Turning off all PWM channels before setup...[0m
+[0;32mI (644) ROBOT_ARM_SERVER: All PWM channels turned off[0m
+[0;32mI (1144) ROBOT_ARM_SERVER: Initializing WiFi in STA mode...[0m
+[0;32mI (1154) wifi:wifi driver task: 3ffc011c, prio:23, stack:6656, core=0[0m
+[0;32mI (1164) wifi:wifi firmware version: 02461b5[0m
+[0;32mI (1164) wifi:wifi certification version: v7.0[0m
+[0;32mI (1164) wifi:config NVS flash: enabled[0m
+[0;32mI (1164) wifi:config nano formating: disabled[0m
+[0;32mI (1174) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (1174) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (1184) wifi:Init management short buffer num: 32[0m
+[0;32mI (1184) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (1194) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (1194) wifi:Init static rx buffer num: 10[0m
+[0;32mI (1194) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (1204) wifi_init: rx ba win: 6[0m
+[0;32mI (1204) wifi_init: tcpip mbox: 32[0m
+[0;32mI (1214) wifi_init: udp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp mbox: 6[0m
+[0;32mI (1214) wifi_init: tcp tx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp rx win: 5760[0m
+[0;32mI (1224) wifi_init: tcp mss: 1440[0m
+[0;32mI (1234) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (1234) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (1244) phy_init: phy_version 4840,02e0d70,Sep  2 2024,19:39:07[0m
+[0;32mI (1334) wifi:mode : sta (68:fe:71:80:76:38)[0m
+[0;32mI (1334) wifi:enable tsf[0m
+[0;32mI (1334) ROBOT_ARM_SERVER: WiFi initialization complete[0m
+[0;32mI (1334) ROBOT_ARM_SERVER: Connecting to AP: ESP32_HAND_CONTROLLER[0m
+[0;32mI (1334) ROBOT_ARM_SERVER: WiFi station started[0m
+[0;32mI (1344) wifi:new:<1,1>, old:<1,0>, ap:<255,255>, sta:<1,1>, prof:1[0m
+[0;32mI (1354) wifi:state: init -> auth (b0)[0m
+[0;32mI (1354) ROBOT_ARM_SERVER: Waiting for WiFi connection...[0m
+[0;32mI (1354) wifi:state: auth -> assoc (0)[0m
+[0;32mI (1374) wifi:Association refused temporarily time 1500, comeback time 1600 (TUs)[0m
+[0;32mI (3014) wifi:state: assoc -> assoc (0)[0m
+[0;32mI (3024) wifi:state: assoc -> run (10)[0m
+[0;32mI (3034) wifi:connected with ESP32_HAND_CONTROLLER, aid = 1, channel 1, 40U, bssid = 20:e7:c8:69:00:11[0m
+[0;32mI (3034) wifi:security: WPA2-PSK, phy: bgn, rssi: -46[0m
+[0;32mI (3044) wifi:pm start, type: 1[0m
+
+[0;32mI (3044) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (3144) wifi:AP's beacon interval = 102400 us, DTIM period = 1[0m
+[0;32mI (4054) esp_netif_handlers: sta ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1[0m
+[0;32mI (4054) ROBOT_ARM_SERVER: Got IP: 192.168.4.2[0m
+[0;32mI (4054) ROBOT_ARM_SERVER: WiFi connected successfully[0m
+[0;32mI (6064) ROBOT_ARM_SERVER: Initializing all servos to default positions:[0m
+[0;32mI (6064) ROBOT_ARM_SERVER: All PWM channels turned off[0m
+[0;32mI (6164) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (6184) ROBOT_ARM_SERVER: Servo 1 -> 180°[0m
+[0;32mI (6204) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (6224) ROBOT_ARM_SERVER: Servo 4 -> 0°[0m
+[0;32mI (6244) ROBOT_ARM_SERVER: Servo 5 -> 90°[0m
+[0;32mI (6264) ROBOT_ARM_SERVER: Servo 6 -> 180°[0m
+[0;32mI (6264) ROBOT_ARM_SERVER:   Servo 0 (Đế): 90°[0m
+[0;32mI (6264) ROBOT_ARM_SERVER:   Servo 1 (Vai): 180°[0m
+[0;32mI (6264) ROBOT_ARM_SERVER:   Servo 2 (Khuỷu): 60°[0m
+[0;32mI (6274) ROBOT_ARM_SERVER:   Servo 4 (Cổ xoay): 0°[0m
+[0;32mI (6274) ROBOT_ARM_SERVER:   Servo 5 (Cổ gật): 90°[0m
+[0;32mI (6284) ROBOT_ARM_SERVER:   Servo 6 (Kẹp): 180°[0m
+[0;32mI (6284) ROBOT_ARM_SERVER: Starting TCP server task[0m
+[0;32mI (6294) ROBOT_ARM_SERVER: TCP server started on port 1234[0m
+[0;32mI (6294) ROBOT_ARM_SERVER: Starting simple WebSocket server on port 8080[0m
+[0;32mI (6304) ROBOT_ARM_SERVER: WebSocket server started on port 8080[0m
+[0;32mI (6314) ROBOT_ARM_SERVER: ==================================================[0m
+[0;32mI (6324) ROBOT_ARM_SERVER: System Ready![0m
+[0;32mI (6324) ROBOT_ARM_SERVER: TCP Server: port 1234[0m
+[0;32mI (6334) ROBOT_ARM_SERVER: Web Interface: http://[YOUR_IP]:8080[0m
+[0;32mI (6334) ROBOT_ARM_SERVER: ==================================================[0m
+[0;32mI (6344) main_task: Returned from app_main()[0m
+[0;32mI (8674) wifi:<ba-add>idx:0 (ifx:0, 20:e7:c8:69:00:11), tid:0, ssn:0, winSize:64[0m
+����������������������������������������������������������������2mI (10624) ROBOT_ARM_SERVER: Client connected from 192.168.4.1[0m
+[0;32mI (10624) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (10624) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (10864) ROBOT_ARM_SERVER: Received char: 'A'[0m
+[0;32mI (10864) ROBOT_ARM_SERVER: Servo 1 -> 180°[0m
+[0;32mI (10864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (10874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (10874) ROBOT_ARM_SERVER: Received char: 'X'[0m
+[0;32mI (10884) ROBOT_ARM_SERVER: Servo 4 -> 0°[0m
+[0;32mI (10884) ROBOT_ARM_SERVER: Received char: 'U'[0m
+[0;32mI (10894) ROBOT_ARM_SERVER: Servo 5 -> 90°[0m
+[0;32mI (10894) ROBOT_ARM_SERVER: Received char: '1'[0m
+[0;32mI (10904) ROBOT_ARM_SERVER: Servo 6 -> 180°[0m
+[0;32mI (10904) ROBOT_ARM_SERVER: Received char: 'L'[0m
+[0;32mI (10914) ROBOT_ARM_SERVER: Servo 0 -> 10°[0m
+[0;32mI (10914) ROBOT_ARM_SERVER: Received char: 'D'[0m
+[0;32mI (10924) ROBOT_ARM_SERVER: Servo 1 -> 90°[0m
+[0;32mI (10924) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (10934) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (11114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (11114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (15734) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (15734) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (20754) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (20754) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (21674) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (21674) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (21864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (21864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (23314) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (23314) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (23404) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (23414) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (24134) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (24134) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (24374) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (24374) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (25774) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (25774) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (26384) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (26384) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (26614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (26624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (26864) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (26864) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (26864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (26874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (27824) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (27824) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (27864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (27864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (28534) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (28534) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (28614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (28614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (30174) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (30174) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (30364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (30364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (30794) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (30794) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (31814) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (31814) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (31904) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (31914) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (35804) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (35804) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (40824) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (40824) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+����������������������������������������������������������������0;32mI (41544) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (41544) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (41744) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (41754) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (45434) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (45434) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+����������������������������������������������������������������[0;32mI (45614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (45614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (45864) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (45864) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (47994) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (47994) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (48114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (48114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (50654) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (50654) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (50864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (50864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (50864) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (50864) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (52194) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (52194) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (52364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (52364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (53014) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (53014) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (53114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (53114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (55984) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (55984) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (61004) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (61004) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (62124) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (62124) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (62364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (62364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (65914) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (65914) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (66114) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (66114) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (66114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (66114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (67964) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (67964) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (68114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (68114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (70944) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (70944) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (70994) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (70994) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (72064) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (72364) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (72364) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (72374) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (72384) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (72384) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (72574) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (72574) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (73634) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (74204) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (74204) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (74364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (74364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (74614) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (74624) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (74864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (74864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (75114) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (75114) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (75114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (75114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (75364) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (75364) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (75614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (75614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (75864) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (75864) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (75864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (75874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (76114) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (76114) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (77694) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (77694) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (77704) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (77714) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (77724) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (79534) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (79534) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (79834) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (79844) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (81064) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (81074) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (83224) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (83224) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (83364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (83374) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (83614) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (83614) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (83614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (83624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (84444) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (84444) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (84614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (84614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (85674) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (85674) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (85864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (85874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (86114) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (86114) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (89774) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (89774) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (89864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (89864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (90114) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (90114) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (90364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (90364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (91204) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (91204) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (95094) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (95094) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (95194) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (95204) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (96224) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (96224) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (96734) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (96734) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (96874) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (96874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (97654) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (97654) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (97864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (97864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (100834) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (100834) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (101034) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (101034) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (101154) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (101154) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (103494) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (103494) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (103694) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (103704) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (104314) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (104314) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (104514) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (104514) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (105434) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (105444) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (105624) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (105624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (106254) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (106254) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (109634) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (109644) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (109864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (109864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (111174) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (111174) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (111364) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (111364) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (111364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (111374) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (114254) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (114254) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (114384) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (114384) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (116294) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (116294) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (117214) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (117214) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (117364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (117364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (117654) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (117654) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (117864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (117874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (119054) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (119054) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (119464) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (119464) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (119874) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (119874) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (120114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (120114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (120804) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (120804) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (121314) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (121314) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (121964) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (121964) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (122334) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (122334) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (122744) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (122744) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (122914) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (123354) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (123354) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (123464) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (123464) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (123764) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (123764) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (123974) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (123974) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (124584) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (124584) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (124624) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (124624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (125814) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (125814) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (126024) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (126024) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (126324) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (126324) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (126364) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (126364) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (126614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (126614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (127044) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (127144) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (127154) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (128474) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (128474) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (128614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (128614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (130014) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (130014) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (130144) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (130144) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (130404) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (130404) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (130614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (130614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (130864) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (130864) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (131114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (131114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (131364) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (131364) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (136364) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (136364) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (138304) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (138314) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (138414) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (138414) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (141384) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (141384) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (141994) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (141994) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (142404) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (142404) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (146394) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (146394) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (150284) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (150294) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (150404) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (150404) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (151114) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (151114) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (151114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (151114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (151524) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (151524) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (151924) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (151924) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (152114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (152114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (155204) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (155204) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (155364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (155374) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (156534) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (156534) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (156844) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (156844) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (156944) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (156944) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (157254) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (157264) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (158284) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.4[0m
+[0;32mI (161554) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (161554) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (165544) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (165544) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (165624) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (165624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (165864) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (165864) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (166114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (166114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (166114) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (166124) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (166364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (166364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (166614) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (166614) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (166864) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (166864) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (167114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (167114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (169754) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (169754) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (169864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (169864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (171074) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (171074) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (171124) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (171124) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (171584) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (171584) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (173224) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (173224) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (173364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (173364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (176604) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (176604) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (177114) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (177114) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (177364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (177364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (177614) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (177614) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (177614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (177624) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (179984) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (179984) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (180124) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (180124) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (181624) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (181624) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (183674) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (183674) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (183864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (183864) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (184284) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (184284) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (184364) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (184364) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (185824) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (185824) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (186024) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (186024) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (186644) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (186644) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (187464) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (187464) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (187614) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (187614) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (190944) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (190944) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (191114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (191114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (191654) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (191664) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (192884) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (192884) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (193114) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (193114) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (195034) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (195034) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (195144) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (195144) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (195854) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (195854) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (195884) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (195884) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (196674) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (196674) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (199334) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (199334) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (199444) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (199444) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (200054) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (200054) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (200254) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (200264) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (201794) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (201794) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (203944) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (203944) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (204354) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (204354) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (204764) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (204764) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (204974) ROBOT_ARM_SERVER: Received char: '7'[0m
+[0;32mI (204974) ROBOT_ARM_SERVER: Servo 2 -> 180°[0m
+[0;32mI (206714) ROBOT_ARM_SERVER: Received char: '6'[0m
+[0;32mI (206714) ROBOT_ARM_SERVER: Servo 2 -> 120°[0m
+[0;32mI (206864) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (206864) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (206864) ROBOT_ARM_SERVER: Received char: '5'[0m
+[0;32mI (206874) ROBOT_ARM_SERVER: Servo 2 -> 60°[0m
+[0;32mI (209884) ROBOT_ARM_SERVER: Received char: '2'[0m
+[0;32mI (209884) ROBOT_ARM_SERVER: Servo 6 -> 150°[0m
+[0;32mI (210114) ROBOT_ARM_SERVER: Received char: '3'[0m
+[0;32mI (210114) ROBOT_ARM_SERVER: Servo 6 -> 120°[0m
+[0;32mI (210114) ROBOT_ARM_SERVER: Received char: '4'[0m
+[0;32mI (210124) ROBOT_ARM_SERVER: Servo 6 -> 90°[0m
+[0;32mI (211834) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (211834) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (212134) ROBOT_ARM_SERVER: Received char: '3'[0m
+[0;32mI (212134) ROBOT_ARM_SERVER: Servo 6 -> 120°[0m
+[0;32mI (212364) ROBOT_ARM_SERVER: Received char: '1'[0m
+[0;32mI (212364) ROBOT_ARM_SERVER: Servo 6 -> 180°[0m
+[0;32mI (212614) ROBOT_ARM_SERVER: Received char: '2'[0m
+[0;32mI (212614) ROBOT_ARM_SERVER: Servo 6 -> 150°[0m
+[0;32mI (212864) ROBOT_ARM_SERVER: Received char: '1'[0m
+[0;32mI (212864) ROBOT_ARM_SERVER: Servo 6 -> 180°[0m
+[0;32mI (216844) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (216844) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (221864) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (221864) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (226894) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (226894) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (232004) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (232004) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (237024) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (237024) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (242044) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (242044) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (247054) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (247054) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (252074) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (252074) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (257194) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (257194) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (262214) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (262214) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (267224) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (267234) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (272244) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (272244) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (277364) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (277364) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (282384) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (282384) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (287404) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (287404) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (292414) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (292414) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (297434) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (297434) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (302554) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (302554) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (307574) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (307574) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (312594) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (312594) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (317604) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (317614) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (322624) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (322624) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (327744) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (327744) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (332764) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (332764) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (337784) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (337784) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (342794) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (342794) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (347914) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (347924) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (352524) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (352524) ROBOT_ARM_SERVER: WebSocket client connected from 192.168.4.3[0m
+[0;32mI (352534) ROBOT_ARM_SERVER: WebSocket client disconnected[0m
+[0;32mI (352934) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (352934) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (357954) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (357954) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (362974) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (362974) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
+[0;32mI (367994) ROBOT_ARM_SERVER: Received char: 'H'[0m
+[0;32mI (367994) ROBOT_ARM_SERVER: Servo 0 -> 90°[0m
