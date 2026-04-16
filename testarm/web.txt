@@ -1,0 +1,990 @@
+#include <stdio.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_netif.h"
+#include "nvs_flash.h"
+#include "driver/i2c.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
+#include "lwip/sockets.h"
+#include "lwip/netdb.h"
+#include "esp_mac.h"
+#include "esp_netif.h"
+#include "esp_http_server.h"
+
+static const char *TAG = "QUAD_SERVO_SERVER_AP";
+
+// AP configuration
+#define AP_SSID      "ESP32_ARM_CONTROLLER"
+#define AP_PASSWORD  "12345678"
+#define AP_CHANNEL   1
+#define MAX_STA_CONN 4
+
+#define TCP_PORT       1234
+#define MAX_CLIENTS    1
+
+// PCA9685 configuration
+#define I2C_MASTER_SCL_IO    22
+#define I2C_MASTER_SDA_IO    21
+#define I2C_MASTER_NUM       I2C_NUM_0
+#define PCA9685_ADDR         0x40
+
+// PCA9685 Registers
+#define PCA9685_MODE1        0x00
+#define PCA9685_PRESCALE     0xFE
+#define PCA9685_LED0_ON_L    0x06
+
+// Servo parameters
+#define SERVO_FREQ           50
+#define MIN_PULSE_US         500
+#define MAX_PULSE_US         2500
+
+// Servo channels (6 servos total)
+#define SERVO_YAW_CHANNEL    0      // MPU68 Yaw
+#define SERVO_PITCH_CHANNEL  1      // MPU68 Pitch
+#define SERVO_2_CHANNEL      2      // Flex sensor 2
+#define SERVO_ROLL_CHANNEL   4      // MPU69 Roll
+#define SERVO_PITCH69_CHANNEL 5     // MPU69 Pitch
+#define SERVO_6_CHANNEL      6      // Flex sensor 1
+
+// Control flags
+static bool accept_tcp_client = true;  // Nhận tín hiệu từ client
+static bool servo_enabled = true;      // Bật/tắt servo
+static SemaphoreHandle_t control_mutex;
+
+// AP event group
+static EventGroupHandle_t ap_event_group;
+#define AP_STARTED_BIT BIT0
+
+// Servo angle lookup tables
+static const int yaw_angles[256] = {
+    ['L'] = 10,    // 10° (quay trái lớn)
+    ['l'] = 50,    // 50° (quay trái vừa)
+    ['H'] = 90,    // 90° (home)
+    ['r'] = 140,   // 140° (quay phải vừa)
+    ['R'] = 170    // 170° (quay phải lớn)
+};
+
+static const int pitch_angles[256] = {
+    ['A'] = 180,   // 180° (pitch -20° to 5°)
+    ['B'] = 150,   // 150° (pitch 20.1° to 40°)
+    ['C'] = 120,   // 120° (pitch 40.1° to 55°)
+    ['D'] = 90     // 90° (pitch 55.1° to 90°)
+};
+
+static const int roll_angles[256] = {
+    ['X'] = 0,     // 0° (Roll -160° to -180° và 160° to 180°)
+    ['Y'] = 45,    // 45° (Roll 120° to 150°)
+    ['Z'] = 90,    // 90° (Roll 61° to 119°)
+    ['W'] = 135,   // 135° (Roll 21° to 60°)
+    ['V'] = 180    // 180° (Roll 0° to 20°)
+};
+
+static const int pitch69_angles[256] = {
+    ['P'] = 180,   // 180° (chênh > +40° so với ban đầu)
+    ['Q'] = 135,   // 135° (chênh > +20° so với ban đầu)
+    ['U'] = 90,    // 90° (trong khoảng ±20°)
+    ['T'] = 45,    // 45° (chênh < -20° so với ban đầu)
+    ['S'] = 0      // 0° (chênh < -40° so với ban đầu)
+};
+
+// Flex sensor 1 -> Servo 6
+static const int flex1_angles[256] = {
+    ['1'] = 180,   // Dưới 100
+    ['2'] = 150,   // 100-400
+    ['3'] = 120,   // 400-800
+    ['4'] = 90     // Trên 800
+};
+
+// Flex sensor 2 -> Servo 2
+static const int flex2_angles[256] = {
+    ['5'] = 60,    // Dưới 1500
+    ['6'] = 120,   // 1500-1600
+    ['7'] = 180    // Trên 1600
+};
+
+// Current servo angles
+static int current_angles[16] = {0};  // Tất cả servo từ 0-15
+
+// Mutex để bảo vệ shared data
+static SemaphoreHandle_t angle_mutex;
+
+// WiFi event handler for AP mode
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, 
+                               int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) {
+        ESP_LOGI(TAG, "AP started");
+        xEventGroupSetBits(ap_event_group, AP_STARTED_BIT);
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+        ESP_LOGI(TAG, "Station " MACSTR " joined, AID=%d", 
+                 MAC2STR(event->mac), event->aid);
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+        ESP_LOGI(TAG, "Station " MACSTR " left, AID=%d", 
+                 MAC2STR(event->mac), event->aid);
+    }
+}
+
+// AP initialization
+static void wifi_init_ap(void) {
+    ESP_LOGI(TAG, "Initializing AP mode...");
+    
+    ap_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    
+    // Create default AP interface
+    esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+    assert(ap_netif);
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    // Register event handlers
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL));
+
+    // Configure AP
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = AP_SSID,
+            .password = AP_PASSWORD,
+            .ssid_len = strlen(AP_SSID),
+            .channel = AP_CHANNEL,
+            .max_connection = MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA2_PSK,
+            .pmf_cfg = {
+                .required = false,
+            },
+        },
+    };
+    
+    if (strlen(AP_PASSWORD) == 0) {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "AP initialization complete");
+    ESP_LOGI(TAG, "AP SSID: %s", AP_SSID);
+    ESP_LOGI(TAG, "AP Password: %s", AP_PASSWORD);
+    ESP_LOGI(TAG, "AP Channel: %d", AP_CHANNEL);
+}
+
+// PCA9685 Functions
+esp_err_t pca9685_write_byte(uint8_t reg, uint8_t value) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (PCA9685_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write_byte(cmd, value, true);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+void set_pwm(uint8_t channel, uint16_t on_time, uint16_t off_time) {
+    if (channel > 15) return;
+    
+    uint8_t reg = PCA9685_LED0_ON_L + 4 * channel;
+    
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (PCA9685_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write_byte(cmd, (on_time & 0xFF), true);
+    i2c_master_write_byte(cmd, (on_time >> 8), true);
+    i2c_master_write_byte(cmd, (off_time & 0xFF), true);
+    i2c_master_write_byte(cmd, (off_time >> 8), true);
+    i2c_master_stop(cmd);
+    
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to set PWM on channel %d", channel);
+    }
+    i2c_cmd_link_delete(cmd);
+}
+
+void set_servo_pulse(uint8_t channel, uint16_t pulse_us) {
+    if (channel > 15) return;
+    
+    float pulse_length = 1000000.0 / SERVO_FREQ;
+    float pulse = pulse_us;
+    pulse /= pulse_length / 4096.0;
+    
+    uint16_t pwm_value = (uint16_t)pulse;
+    set_pwm(channel, 0, pwm_value);
+}
+
+void set_servo_angle(uint8_t channel, uint8_t angle) {
+    if (channel > 15) return;
+    if (angle > 180) angle = 180;
+    if (angle < 0) angle = 0;
+    
+    // Check if servo is enabled
+    xSemaphoreTake(control_mutex, portMAX_DELAY);
+    bool enabled = servo_enabled;
+    xSemaphoreGive(control_mutex);
+    
+    if (!enabled) {
+        ESP_LOGW(TAG, "Servo disabled, ignoring command for channel %d", channel);
+        return;
+    }
+    
+    uint16_t pulse_us = MIN_PULSE_US + (angle * (MAX_PULSE_US - MIN_PULSE_US) / 180);
+    set_servo_pulse(channel, pulse_us);
+    
+    // Update current angle with mutex protection
+    xSemaphoreTake(angle_mutex, portMAX_DELAY);
+    current_angles[channel] = angle;
+    xSemaphoreGive(angle_mutex);
+    
+    ESP_LOGI(TAG, "Servo %d -> %d°", channel, angle);
+}
+
+// Hàm tắt tất cả các kênh PWM
+void turn_off_all_channels() {
+    for (int channel = 0; channel < 16; channel++) {
+        set_pwm(channel, 0, 0);  // Tắt kênh bằng cách set off_time = 0
+    }
+    ESP_LOGI(TAG, "All PWM channels turned off");
+}
+
+// Initialize PCA9685
+esp_err_t pca9685_init() {
+    ESP_LOGI(TAG, "Initializing PCA9685...");
+    
+    // Reset device
+    pca9685_write_byte(PCA9685_MODE1, 0x00);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    
+    // Enable auto-increment and restart
+    pca9685_write_byte(PCA9685_MODE1, 0x20);
+    
+    // Set prescaler for 50Hz
+    uint8_t prescale = (uint8_t)((25000000.0 / (4096.0 * SERVO_FREQ)) - 0.5);
+    ESP_LOGI(TAG, "Prescale value: %d", prescale);
+    pca9685_write_byte(PCA9685_PRESCALE, prescale);
+    
+    // Enable auto-increment and restart
+    pca9685_write_byte(PCA9685_MODE1, 0xA0);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    
+    ESP_LOGI(TAG, "PCA9685 initialized");
+    return ESP_OK;
+}
+
+// I2C initialization
+void i2c_master_init() {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = 400000,
+    };
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
+    ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0));
+    ESP_LOGI(TAG, "I2C initialized successfully");
+}
+
+// Process received character
+static void process_char(char c, int client_sock, bool from_web) {
+    ESP_LOGI(TAG, "Received char: '%c' from %s", c, from_web ? "Web" : "TCP");
+    
+    // Check if TCP client commands are accepted
+    if (!from_web) {
+        xSemaphoreTake(control_mutex, portMAX_DELAY);
+        bool accept = accept_tcp_client;
+        xSemaphoreGive(control_mutex);
+        
+        if (!accept) {
+            ESP_LOGW(TAG, "TCP client commands disabled, ignoring");
+            if (client_sock >= 0) {
+                char msg[] = "TCP commands disabled\n";
+                send(client_sock, msg, strlen(msg), 0);
+            }
+            return;
+        }
+    }
+    
+    // MPU68 Yaw (Servo 0)
+    if (c == 'L' || c == 'l' || c == 'H' || c == 'r' || c == 'R') {
+        int angle = yaw_angles[(int)c];
+        set_servo_angle(SERVO_YAW_CHANNEL, angle);
+    }
+    // MPU68 Pitch (Servo 1)
+    else if (c == 'A' || c == 'B' || c == 'C' || c == 'D') {
+        int angle = pitch_angles[(int)c];
+        set_servo_angle(SERVO_PITCH_CHANNEL, angle);
+    }
+    // Flex sensor 2 -> Servo 2
+    else if (c == '5' || c == '6' || c == '7') {
+        int angle = flex2_angles[(int)c];
+        set_servo_angle(SERVO_2_CHANNEL, angle);
+    }
+    // MPU69 Roll (Servo 4)
+    else if (c == 'X' || c == 'Y' || c == 'Z' || c == 'W' || c == 'V') {
+        int angle = roll_angles[(int)c];
+        set_servo_angle(SERVO_ROLL_CHANNEL, angle);
+    }
+    // MPU69 Pitch (Servo 5)
+    else if (c == 'P' || c == 'Q' || c == 'U' || c == 'T' || c == 'S') {
+        int angle = pitch69_angles[(int)c];
+        set_servo_angle(SERVO_PITCH69_CHANNEL, angle);
+    }
+    // Flex sensor 1 -> Servo 6
+    else if (c == '1' || c == '2' || c == '3' || c == '4') {
+        int angle = flex1_angles[(int)c];
+        set_servo_angle(SERVO_6_CHANNEL, angle);
+    }
+    // Status request
+    else if (c == '?') {
+        xSemaphoreTake(angle_mutex, portMAX_DELAY);
+        char status[256];
+        snprintf(status, sizeof(status), 
+                 "S0:%d°,S1:%d°,S2:%d°,S4:%d°,S5:%d°,S6:%d°\n"
+                 "TCP:%s,Servo:%s\n",
+                 current_angles[SERVO_YAW_CHANNEL],
+                 current_angles[SERVO_PITCH_CHANNEL],
+                 current_angles[SERVO_2_CHANNEL],
+                 current_angles[SERVO_ROLL_CHANNEL],
+                 current_angles[SERVO_PITCH69_CHANNEL],
+                 current_angles[SERVO_6_CHANNEL],
+                 accept_tcp_client ? "ON" : "OFF",
+                 servo_enabled ? "ON" : "OFF");
+        xSemaphoreGive(angle_mutex);
+        
+        if (client_sock >= 0) {
+            send(client_sock, status, strlen(status), 0);
+        } else {
+            ESP_LOGI(TAG, "Status: %s", status);
+        }
+    }
+    else {
+        ESP_LOGW(TAG, "Unknown character: '%c' (0x%02x)", c, c);
+        if (client_sock >= 0) {
+            char msg[] = "Unknown command\n";
+            send(client_sock, msg, strlen(msg), 0);
+        }
+    }
+}
+
+// TCP server task
+static void tcp_server_task(void *pvParameters) {
+    struct sockaddr_in server_addr;
+    struct sockaddr_in client_addr;
+    socklen_t addr_len;
+    int client_sock = -1;
+    char rx_char;
+    int len;
+    
+    ESP_LOGI(TAG, "Starting TCP server task");
+    
+    while (1) {
+        // Create socket
+        int listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (listen_sock < 0) {
+            ESP_LOGE(TAG, "Unable to create socket, retrying in 2s...");
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        // Set socket options
+        int opt = 1;
+        setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+        
+        // Configure timeout
+        struct timeval timeout;
+        timeout.tv_sec = 2;
+        timeout.tv_usec = 0;
+        setsockopt(listen_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+        
+        // Bind socket
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        server_addr.sin_port = htons(TCP_PORT);
+        
+        if (bind(listen_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+            ESP_LOGE(TAG, "Socket bind failed, retrying in 2s...");
+            close(listen_sock);
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        // Listen for connections
+        if (listen(listen_sock, MAX_CLIENTS) < 0) {
+            ESP_LOGE(TAG, "Socket listen failed, retrying in 2s...");
+            close(listen_sock);
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            continue;
+        }
+        
+        ESP_LOGI(TAG, "TCP server started on port %d", TCP_PORT);
+        ESP_LOGI(TAG, "Waiting for single character commands...");
+        
+        // Main server loop
+        while (1) {
+            // Accept client connection
+            addr_len = sizeof(client_addr);
+            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &addr_len);
+            
+            if (client_sock < 0) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // Timeout, continue listening
+                    continue;
+                }
+                ESP_LOGE(TAG, "Accept failed: errno=%d", errno);
+                break; // Break inner loop, restart server
+            }
+            
+            ESP_LOGI(TAG, "Client connected from %s", inet_ntoa(client_addr.sin_addr));
+            
+            // Set receive timeout for client
+            timeout.tv_sec = 1;
+            timeout.tv_usec = 0;
+            setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+            
+            // Communication loop with client
+            while (1) {
+                len = recv(client_sock, &rx_char, 1, 0);
+                
+                if (len < 0) {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        // Timeout, continue
+                        continue;
+                    }
+                    ESP_LOGE(TAG, "Recv failed: errno=%d", errno);
+                    break;
+                } else if (len == 0) {
+                    ESP_LOGI(TAG, "Client disconnected");
+                    break;
+                }
+                
+                // Process received character (from TCP, not web)
+                process_char(rx_char, client_sock, false);
+            }
+            
+            // Close client socket
+            close(client_sock);
+            client_sock = -1;
+            ESP_LOGI(TAG, "Connection closed, waiting for new connection...");
+        }
+        
+        // Close listen socket and restart
+        if (listen_sock >= 0) {
+            close(listen_sock);
+        }
+        ESP_LOGI(TAG, "Restarting TCP server...");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+// HTTP Server Handlers
+static esp_err_t web_cmd_handler(httpd_req_t *req) {
+    char buf[100];
+    
+    // Get query parameter
+    if (httpd_req_get_url_query_str(req, buf, sizeof(buf)) == ESP_OK) {
+        char cmd[2] = {0};
+        
+        // Parse cmd parameter
+        if (httpd_query_key_value(buf, "cmd", cmd, sizeof(cmd)) == ESP_OK) {
+            ESP_LOGI(TAG, "Web command: %s", cmd);
+            process_char(cmd[0], -1, true); // -1 means no TCP socket, true means from web
+        }
+    }
+    
+    const char *resp = "OK";
+    httpd_resp_send(req, resp, strlen(resp));
+    return ESP_OK;
+}
+
+static esp_err_t web_control_handler(httpd_req_t *req) {
+    char buf[100];
+    char param[10];
+    
+    if (httpd_req_get_url_query_str(req, buf, sizeof(buf)) == ESP_OK) {
+        // Parse control parameters
+        xSemaphoreTake(control_mutex, portMAX_DELAY);
+        
+        if (httpd_query_key_value(buf, "tcp", param, sizeof(param)) == ESP_OK) {
+            accept_tcp_client = (strcmp(param, "1") == 0);
+            ESP_LOGI(TAG, "TCP client commands: %s", accept_tcp_client ? "ENABLED" : "DISABLED");
+        }
+        
+        if (httpd_query_key_value(buf, "servo", param, sizeof(param)) == ESP_OK) {
+            servo_enabled = (strcmp(param, "1") == 0);
+            ESP_LOGI(TAG, "Servo power: %s", servo_enabled ? "ON" : "OFF");
+            
+            if (!servo_enabled) {
+                turn_off_all_channels();
+            }
+        }
+        
+        xSemaphoreGive(control_mutex);
+    }
+    
+    const char *resp = "OK";
+    httpd_resp_send(req, resp, strlen(resp));
+    return ESP_OK;
+}
+
+static esp_err_t web_status_handler(httpd_req_t *req) {
+    char status[512];
+    
+    xSemaphoreTake(angle_mutex, portMAX_DELAY);
+    xSemaphoreTake(control_mutex, portMAX_DELAY);
+    
+    snprintf(status, sizeof(status),
+             "{\"s0\":%d,\"s1\":%d,\"s2\":%d,\"s4\":%d,\"s5\":%d,\"s6\":%d,"
+             "\"tcp\":%d,\"servo\":%d}",
+             current_angles[SERVO_YAW_CHANNEL],
+             current_angles[SERVO_PITCH_CHANNEL],
+             current_angles[SERVO_2_CHANNEL],
+             current_angles[SERVO_ROLL_CHANNEL],
+             current_angles[SERVO_PITCH69_CHANNEL],
+             current_angles[SERVO_6_CHANNEL],
+             accept_tcp_client ? 1 : 0,
+             servo_enabled ? 1 : 0);
+    
+    xSemaphoreGive(control_mutex);
+    xSemaphoreGive(angle_mutex);
+    
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, status, strlen(status));
+    return ESP_OK;
+}
+
+// HTML Page for Web Interface - ĐÃ SỬA LỖI CÚ PHÁP
+static const char* HTML_PAGE = 
+"<!DOCTYPE html>\n"
+"<html>\n"
+"<head>\n"
+"<meta name='viewport' content='width=device-width, initial-scale=1'>\n"
+"<meta charset='UTF-8'>\n"
+"<style>\n"
+"body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }\n"
+".container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n"
+"h1 { color: #333; text-align: center; }\n"
+".control-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }\n"
+".servo-control { display: flex; align-items: center; margin: 10px 0; }\n"
+".servo-label { width: 150px; font-weight: bold; }\n"
+".knob { width: 60px; height: 60px; cursor: pointer; }\n"
+".angle-display { margin-left: 20px; font-weight: bold; min-width: 80px; }\n"
+".toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; margin: 0 10px; }\n"
+".toggle-switch input { opacity: 0; width: 0; height: 0; }\n"
+".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }\n"
+".slider:before { position: absolute; content: \"\"; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }\n"
+"input:checked + .slider { background-color: #4CAF50; }\n"
+"input:checked + .slider:before { transform: translateX(26px); }\n"
+".status { background: #e7f3fe; padding: 15px; border-radius: 8px; margin: 20px 0; }\n"
+".btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }\n"
+".btn:hover { background: #0056b3; }\n"
+".btn-red { background: #dc3545; }\n"
+".btn-red:hover { background: #c82333; }\n"
+".btn-green { background: #28a745; }\n"
+".btn-green:hover { background: #218838; }\n"
+".current-values { margin-top: 20px; }\n"
+".value-item { display: inline-block; margin: 5px 15px; padding: 5px 10px; background: #e9ecef; border-radius: 5px; }\n"
+"</style>\n"
+"<script>\n"
+"let currentAngles = {s0:90, s1:180, s2:60, s4:0, s5:90, s6:180};\n"
+"let tcpEnabled = true;\n"
+"let servoEnabled = true;\n"
+"\n"
+"function updateStatus() {\n"
+"  fetch('/status')\n"
+"    .then(response => response.json())\n"
+"    .then(data => {\n"
+"      currentAngles = data;\n"
+"      tcpEnabled = data.tcp;\n"
+"      servoEnabled = data.servo;\n"
+"      \n"
+"      // Update display\n"
+"      document.getElementById('tcp-status').textContent = tcpEnabled ? 'ON' : 'OFF';\n"
+"      document.getElementById('tcp-toggle').checked = tcpEnabled;\n"
+"      document.getElementById('servo-status').textContent = servoEnabled ? 'ON' : 'OFF';\n"
+"      document.getElementById('servo-toggle').checked = servoEnabled;\n"
+"      \n"
+"      // Update angle displays\n"
+"      for(let key in data) {\n"
+"        if(key.startsWith('s')) {\n"
+"          let elem = document.getElementById(key + '-value');\n"
+"          if(elem) elem.textContent = data[key] + '°';\n"
+"        }\n"
+"      }\n"
+"    });\n"
+"}\n"
+"\n"
+"function sendCommand(cmd) {\n"
+"  fetch('/cmd?cmd=' + cmd)\n"
+"    .then(() => {\n"
+"      setTimeout(updateStatus, 100);\n"
+"    });\n"
+"}\n"
+"\n"
+"function controlServo(servo, angle) {\n"
+"  // Map servo and angle to command character\n"
+"  const cmdMap = {\n"
+"    '0': {90:'H', 140:'r', 170:'R', 50:'l', 10:'L'},\n"
+"    '1': {180:'A', 150:'B', 120:'C', 90:'D'},\n"
+"    '2': {60:'5', 120:'6', 180:'7'},\n"
+"    '4': {0:'X', 45:'Y', 90:'Z', 135:'W', 180:'V'},\n"
+"    '5': {180:'P', 135:'Q', 90:'U', 45:'T', 0:'S'},\n"
+"    '6': {180:'1', 150:'2', 120:'3', 90:'4'}\n"
+"  };\n"
+"  \n"
+"  if(cmdMap[servo] && cmdMap[servo][angle]) {\n"
+"    sendCommand(cmdMap[servo][angle]);\n"
+"  }\n"
+"}\n"
+"\n"
+"function toggleTCP() {\n"
+"  const enabled = !tcpEnabled;\n"
+"  fetch('/control?tcp=' + (enabled ? '1' : '0'))\n"
+"    .then(() => {\n"
+"      tcpEnabled = enabled;\n"
+"      updateStatus();\n"
+"    });\n"
+"}\n"
+"\n"
+"function toggleServo() {\n"
+"  const enabled = !servoEnabled;\n"
+"  fetch('/control?servo=' + (enabled ? '1' : '0'))\n"
+"    .then(() => {\n"
+"      servoEnabled = enabled;\n"
+"      updateStatus();\n"
+"    });\n"
+"}\n"
+"\n"
+"// Initialize on load\n"
+"window.onload = function() {\n"
+"  updateStatus();\n"
+"  setInterval(updateStatus, 2000);\n"
+"}\n"
+"</script>\n"
+"</head>\n"
+"<body>\n"
+"<div class='container'>\n"
+"<h1>🤖 ARM Controller Web Interface</h1>\n"
+"\n"
+"<div class='status'>\n"
+"<h3>📶 Connection Status</h3>\n"
+"<p><strong>WiFi:</strong> " AP_SSID "</p>\n"
+"<p><strong>IP:</strong> 192.168.4.1</p>\n"
+"<p><strong>TCP Server:</strong> <span id='tcp-status'>--</span> (Port: 1234)</p>\n"
+"</div>\n"
+"\n"
+"<div class='control-section'>\n"
+"<h3>⚙️ System Control</h3>\n"
+"<div style='display: flex; align-items: center; margin: 10px 0;'>\n"
+"<span style='width: 150px;'>TCP Client:</span>\n"
+"<label class='toggle-switch'>\n"
+"<input type='checkbox' id='tcp-toggle' onchange='toggleTCP()'>\n"
+"<span class='slider'></span>\n"
+"</label>\n"
+"<span id='tcp-status-text' style='margin-left: 10px;'>--</span>\n"
+"<small style='margin-left: 20px; color: #666;'>When OFF, only web control works</small>\n"
+"</div>\n"
+"\n"
+"<div style='display: flex; align-items: center; margin: 10px 0;'>\n"
+"<span style='width: 150px;'>Servo Power:</span>\n"
+"<label class='toggle-switch'>\n"
+"<input type='checkbox' id='servo-toggle' onchange='toggleServo()'>\n"
+"<span class='slider'></span>\n"
+"</label>\n"
+"<span id='servo-status-text' style='margin-left: 10px;'>--</span>\n"
+"<small style='margin-left: 20px; color: #666;'>Turn OFF all servos</small>\n"
+"</div>\n"
+"\n"
+"<div style='margin-top: 15px;'>\n"
+"<button class='btn' onclick=\"sendCommand('?')\">🔄 Refresh Status</button>\n"
+"<button class='btn btn-red' onclick=\"controlServo('0',90);controlServo('1',180);controlServo('2',60);controlServo('4',0);controlServo('5',90);controlServo('6',180)\">🏠 Reset All</button>\n"
+"</div>\n"
+"</div>\n"
+"\n"
+"<div class='control-section'>\n"
+"<h3>🎛️ Servo Control (Knob Interface)</h3>\n"
+"<p><small>Select angle from dropdown - each servo has specific angles</small></p>\n"
+"\n"
+"<!-- Servo 0 - Yaw -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 0 (Yaw):</div>\n"
+"<select onchange=\"controlServo('0', parseInt(this.value))\">\n"
+"<option value='10'>10° (L)</option>\n"
+"<option value='50'>50° (l)</option>\n"
+"<option value='90' selected>90° (H)</option>\n"
+"<option value='140'>140° (r)</option>\n"
+"<option value='170'>170° (R)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s0-value'>90°</div>\n"
+"</div>\n"
+"\n"
+"<!-- Servo 1 - Pitch -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 1 (Pitch):</div>\n"
+"<select onchange=\"controlServo('1', parseInt(this.value))\">\n"
+"<option value='180' selected>180° (A)</option>\n"
+"<option value='150'>150° (B)</option>\n"
+"<option value='120'>120° (C)</option>\n"
+"<option value='90'>90° (D)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s1-value'>180°</div>\n"
+"</div>\n"
+"\n"
+"<!-- Servo 2 - Flex2 -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 2 (Flex2):</div>\n"
+"<select onchange=\"controlServo('2', parseInt(this.value))\">\n"
+"<option value='60' selected>60° (5)</option>\n"
+"<option value='120'>120° (6)</option>\n"
+"<option value='180'>180° (7)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s2-value'>60°</div>\n"
+"</div>\n"
+"\n"
+"<!-- Servo 4 - Roll -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 4 (Roll):</div>\n"
+"<select onchange=\"controlServo('4', parseInt(this.value))\">\n"
+"<option value='0' selected>0° (X)</option>\n"
+"<option value='45'>45° (Y)</option>\n"
+"<option value='90'>90° (Z)</option>\n"
+"<option value='135'>135° (W)</option>\n"
+"<option value='180'>180° (V)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s4-value'>0°</div>\n"
+"</div>\n"
+"\n"
+"<!-- Servo 5 - Pitch69 -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 5 (Pitch69):</div>\n"
+"<select onchange=\"controlServo('5', parseInt(this.value))\">\n"
+"<option value='180'>180° (P)</option>\n"
+"<option value='135'>135° (Q)</option>\n"
+"<option value='90' selected>90° (U)</option>\n"
+"<option value='45'>45° (T)</option>\n"
+"<option value='0'>0° (S)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s5-value'>90°</div>\n"
+"</div>\n"
+"\n"
+"<!-- Servo 6 - Flex1 -->\n"
+"<div class='servo-control'>\n"
+"<div class='servo-label'>Servo 6 (Flex1):</div>\n"
+"<select onchange=\"controlServo('6', parseInt(this.value))\">\n"
+"<option value='180' selected>180° (1)</option>\n"
+"<option value='150'>150° (2)</option>\n"
+"<option value='120'>120° (3)</option>\n"
+"<option value='90'>90° (4)</option>\n"
+"</select>\n"
+"<div class='angle-display' id='s6-value'>180°</div>\n"
+"</div>\n"
+"</div>\n"
+"\n"
+"<div class='control-section'>\n"
+"<h3>📊 Current Values</h3>\n"
+"<div class='current-values'>\n"
+"<span class='value-item'>Servo 0: <span id='s0-display'>--</span>°</span>\n"
+"<span class='value-item'>Servo 1: <span id='s1-display'>--</span>°</span>\n"
+"<span class='value-item'>Servo 2: <span id='s2-display'>--</span>°</span>\n"
+"<span class='value-item'>Servo 4: <span id='s4-display'>--</span>°</span>\n"
+"<span class='value-item'>Servo 5: <span id='s5-display'>--</span>°</span>\n"
+"<span class='value-item'>Servo 6: <span id='s6-display'>--</span>°</span>\n"
+"</div>\n"
+"</div>\n"
+"\n"
+"<div class='control-section'>\n"
+"<h3>🎯 Quick Commands</h3>\n"
+"<button class='btn' onclick=\"sendCommand('H')\">Home Yaw</button>\n"
+"<button class='btn' onclick=\"sendCommand('A')\">Max Pitch</button>\n"
+"<button class='btn' onclick=\"sendCommand('X')\">Min Roll</button>\n"
+"<button class='btn' onclick=\"sendCommand('U')\">Center Pitch69</button>\n"
+"<button class='btn btn-green' onclick=\"updateStatus()\">Refresh All</button>\n"
+"</div>\n"
+"\n"
+"</div>\n"
+"<script>\n"
+"// Update display elements\n"
+"function updateDisplays() {\n"
+"  for(let i of ['0','1','2','4','5','6']) {\n"
+"    let elem = document.getElementById('s' + i + '-display');\n"
+"    if(elem) elem.textContent = currentAngles['s' + i];\n"
+"  }\n"
+"  document.getElementById('tcp-status-text').textContent = tcpEnabled ? 'ON' : 'OFF';\n"
+"  document.getElementById('servo-status-text').textContent = servoEnabled ? 'ON' : 'OFF';\n"
+"}\n"
+"// Call updateDisplays when status updates\n"
+"setInterval(updateDisplays, 1000);\n"
+"updateDisplays();\n"
+"</script>\n"
+"</body>\n"
+"</html>";
+
+static esp_err_t root_get_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, HTML_PAGE, strlen(HTML_PAGE));
+    return ESP_OK;
+}
+
+// HTTP Server Configuration
+static httpd_handle_t start_webserver(void) {
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_uri_handlers = 10;
+    config.stack_size = 8192;
+    
+    httpd_handle_t server = NULL;
+    
+    if (httpd_start(&server, &config) == ESP_OK) {
+        // Register URI handlers
+        httpd_uri_t root = {
+            .uri = "/",
+            .method = HTTP_GET,
+            .handler = root_get_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &root);
+        
+        httpd_uri_t cmd = {
+            .uri = "/cmd",
+            .method = HTTP_GET,
+            .handler = web_cmd_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &cmd);
+        
+        httpd_uri_t control = {
+            .uri = "/control",
+            .method = HTTP_GET,
+            .handler = web_control_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &control);
+        
+        httpd_uri_t status = {
+            .uri = "/status",
+            .method = HTTP_GET,
+            .handler = web_status_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &status);
+        
+        ESP_LOGI(TAG, "Web server started on port 80");
+    } else {
+        ESP_LOGE(TAG, "Failed to start web server");
+    }
+    
+    return server;
+}
+
+void app_main(void) {
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "Starting Quad Servo Controller Server (AP Mode)...");
+    ESP_LOGI(TAG, "==================================================");
+    
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+    
+    // Create mutexes
+    angle_mutex = xSemaphoreCreateMutex();
+    control_mutex = xSemaphoreCreateMutex();
+    
+    // Initialize I2C and PCA9685
+    i2c_master_init();
+    
+    if (pca9685_init() != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize PCA9685!");
+        return;
+    }
+    
+    // Tắt tất cả các kênh PWM trước khi setup servo
+    ESP_LOGI(TAG, "Turning off all PWM channels before setup...");
+    turn_off_all_channels();
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    
+    // Initialize WiFi in AP mode
+    wifi_init_ap();
+    
+    ESP_LOGI(TAG, "Waiting for AP to start...");
+    EventBits_t bits = xEventGroupWaitBits(ap_event_group, 
+                                          AP_STARTED_BIT, 
+                                          pdFALSE, pdTRUE, portMAX_DELAY);
+    
+    if (bits & AP_STARTED_BIT) {
+        ESP_LOGI(TAG, "AP started successfully");
+        ESP_LOGI(TAG, "Connect to WiFi: SSID: %s, Password: %s", AP_SSID, AP_PASSWORD);
+        ESP_LOGI(TAG, "ESP32 IP Address: 192.168.4.1");
+    }
+    
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    // Start Web Server
+    httpd_handle_t web_server = start_webserver();
+    if (web_server == NULL) {
+        ESP_LOGE(TAG, "Web server failed to start!");
+    }
+    
+    // Initialize all servos to default positions
+    ESP_LOGI(TAG, "Initializing all servos to default positions:");
+    
+    // Tắt tất cả kênh trước khi setup từng servo
+    turn_off_all_channels();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    
+    set_servo_angle(SERVO_YAW_CHANNEL, 90);      // Yaw home (H)
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    set_servo_angle(SERVO_PITCH_CHANNEL, 180);   // Pitch position A
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    set_servo_angle(SERVO_2_CHANNEL, 60);        // Flex2 default (5)
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    set_servo_angle(SERVO_ROLL_CHANNEL, 0);      // Roll position X
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    set_servo_angle(SERVO_PITCH69_CHANNEL, 90);  // Pitch69 position U
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+    set_servo_angle(SERVO_6_CHANNEL, 180);       // Flex1 default (1)
+    
+    ESP_LOGI(TAG, "  Servo 0 (Yaw): 90°");
+    ESP_LOGI(TAG, "  Servo 1 (Pitch): 180°");
+    ESP_LOGI(TAG, "  Servo 2 (Flex2): 60°");
+    ESP_LOGI(TAG, "  Servo 4 (Roll): 0°");
+    ESP_LOGI(TAG, "  Servo 5 (Pitch69): 90°");
+    ESP_LOGI(TAG, "  Servo 6 (Flex1): 180°");
+    
+    // Start TCP server task
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
+    
+    // Print command reference
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "System Ready!");
+    ESP_LOGI(TAG, "==================================================");
+    ESP_LOGI(TAG, "Web Interface: http://192.168.4.1");
+    ESP_LOGI(TAG, "TCP Client: 192.168.4.1:%d", TCP_PORT);
+    ESP_LOGI(TAG, "TCP Commands: %s", accept_tcp_client ? "ENABLED" : "DISABLED");
+    ESP_LOGI(TAG, "Servo Power: %s", servo_enabled ? "ON" : "OFF");
+    ESP_LOGI(TAG, "==================================================");
+    
+    // Keep main task alive
+    while (1) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
